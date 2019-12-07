@@ -1,0 +1,45 @@
+-----SG-----
+12w-2hl-train: 55/800
+12w-2hl-test: 7/400
+12w-4hl-train: 450/800
+12w-4hl-test: 95/400
+12w-8hl-train: 800/800
+12w-8hl-test: 375/400
+12w-10hl-train: 800/800
+12w-10hl-test: 360/400
+
+
+
+-----SA-----
+12w-2hl-train: 0/800
+12w-2hl-test: 0/400
+12w-4hl-train: 178/800
+12w-4hl-test: 189/400
+12w-8hl-train: 800/800
+12w-8hl-test: 355/400
+12w-10hl-train: 800/800
+12w-10hl-test: 314/400
+
+
+
+-----FC-----
+12w-2hl-train: 23/800
+12w-2hl-test: 21/400
+12w-4hl-train: 659/800
+12w-4hl-test: 63/400
+12w-8hl-train: 800/800
+12w-8hl-test: 197/400
+12w-10hl-train: 800/800
+12w-10hl-test: 246/400
+
+
+
+-----NF-----
+12w-2hl-train: 55/800
+12w-2hl-test: 0/400
+12w-4hl-train: 547/800
+12w-4hl-test: 67/400
+12w-8hl-train: 800/800
+12w-8hl-test: 170/400
+12w-10hl-train: 800/800
+12w-10hl-test: 126/400
