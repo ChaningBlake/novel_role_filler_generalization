@@ -80,11 +80,16 @@ og_vals = np.empty((3,2), dtype=float)
 # Iterate through each of the words
 for i in range(3):
     # Iterate through each of the IGs and OGs
-        for j in range(2):
-        ig_vals[i,j,j] = ig.predict(input_combo[k])
-        og_vals[i,j,j] = og.predict(input_combo[k])
-    
-    
+    for j in range(2):
+        ig_vals[i,j] = ig.predict(input_combo[k])
+        og_vals[i,j] = og.predict(input_combo[k])
+        
+# max of result trains the model from the previous
+# time step
+if i-1 > 0:
+    ig[i-1].fit(max(ig_vals[i,:]))
+    og[i-1].fit(max(og_vals[i,:]))
+
 # -- Test --
 test = args.lookup("agent*open*store")
 test = np.expand_dims(test,axis=0)
