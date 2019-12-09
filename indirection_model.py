@@ -1,4 +1,4 @@
-#/usr/bin/env python3
+#!/usr/bin/env python3
 
 '''
 November 2019
@@ -37,7 +37,7 @@ wm = np.empty(3, dtype=str)
 # encodings = np.zeros((3,6))
 encodings = ["cat", "ate", "toy"]
 
- -- Input Gates --
+#-- Input Gates --
 # Set up the input gate neural networks (one for each wm slot)
 ig = np.empty(3, dtype=object)
 for i in range(3):
@@ -104,7 +104,7 @@ while accuracy < 95 and cur_task < max_tasks:
             for k in range(2):
                 ig_vals[i,j,k] = ig.predict(input_combo[i,k])
                 og_vals[i,j,k] = og.predict(input_combo[i,k]) 
-            max_val[i,j,:] = [np.argmax(ig_vals[i,j,:], np.argmax(og_vals[i,j,:])]
+            max_val[i,j,:] = [np.argmax(ig_vals[i,j,:]), np.argmax(og_vals[i,j,:])]
             # if the input gate is open, store encoding in wm
             if max_val[i,j,0] == 0:
                 wm[i] = encodings[i]
