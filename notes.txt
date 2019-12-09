@@ -1,3 +1,18 @@
+-----------------------------------------------
+-- Questions                                 --
+-----------------------------------------------
+I'm having to use expand dims on the hrr's, am I doing that properly?
+
+
+
+
+
+
+
+
+
+
+
 - Working on the query part
 The three models stay the same over all time steps
 the previous time steps input is trained with the output of the current

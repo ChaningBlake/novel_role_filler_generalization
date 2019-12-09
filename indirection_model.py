@@ -102,8 +102,8 @@ while accuracy < 95 and cur_task < max_tasks:
     for i in range(3):
         for j in range(3):
             for k in range(2):
-                ig_vals[i,j,k] = ig[j].predict(np.expand_dims(args.lookup(input_combo[i,k])))
-                og_vals[i,j,k] = og[j].predict(np.expand_dims(args.lookup(input_combo[i,k])))
+                ig_vals[i,j,k] = ig[j].predict(np.expand_dims(args.lookup(input_combo[i,k]),axis=0))
+                og_vals[i,j,k] = og[j].predict(np.expand_dims(args.lookup(input_combo[i,k]),axis=0))
             max_val[i,j,:] = [np.argmax(ig_vals[i,j,:]), np.argmax(og_vals[i,j,:])]
             # if the input gate is open, store encoding in wm
             if max_val[i,j,0] == 0:
@@ -115,9 +115,9 @@ while accuracy < 95 and cur_task < max_tasks:
             # Given the input from the last time step, train the model with the
             # highest output from the current timestep
             for wm in range(3):
-                ig[wm].fit(args.lookup(input_combo[i-1,max_val[i-1,wm,0]]),
+                ig[wm].fit(np.expand_dims(args.lookup(input_combo[i-1,max_val[i-1,wm,0]]),axis=0),
                            max(ig_vals[i,wm,:]))
-                og[wm].fit(args.lookup(input_combo[i-1,max_val[i-1,wm,1]]), 
+                og[wm].fit(np.expand_dims(args.lookup(input_combo[i-1,max_val[i-1,wm,1]]),axis=0), 
                            max(og_vals[i,wm,:]))
 
     # -- Query --
@@ -130,22 +130,22 @@ while accuracy < 95 and cur_task < max_tasks:
     # j -> open or close value
     for i in range(3):
         for j in range(2):
-            og_vals[3,i,j] = og[i].predict(np.expand_dims(query_hrr[j]))
+            og_vals[3,i,j] = og[i].predict(np.expand_dims(query_hrr[j],axis=0))
         # train net
         # if open and storing the correct thing in wm
         if (og_vals[3,i,0] > og_vals[3,i,1]) and (wm[i] ==
         encodings[role_dict[query_role]]):
-                ig[i].fit(args.lookup(input_combo[max_val[2,i,0]]),
+                ig[i].fit(np.expand_dims(args.lookup(input_combo[max_val[2,i,0]]),axis=0),
                            success_reward)
-                og[i].fit(args.lookup(input_combo[max_val[2,i,1]]), 
+                og[i].fit(np.expand_dims(args.lookup(input_combo[max_val[2,i,1]]),axis=0), 
                            rsuccess_reward)
         else:
-            ig[i].fit(args.lookup(input_combo[max_val[2,i,0]]),
+            ig[i].fit(np.expand_dims(args.lookup(input_combo[max_val[2,i,0]]),axis=0),
                        default_reward)
-            og[i].fit(args.lookup(input_combo[max_val[2,i,1]]), 
+            og[i].fit(np.expand_dims(args.lookup(input_combo[max_val[2,i,1]]),axis=0), 
                        default_reward)
     cur_task += 1
-	if cur_task % 200 == 0:
-		print("Tasks Complete:", cur_task)
-		print("Block Accuracy: %.2f"%((block_tasks_correct/200)*100))
+    if cur_task % 200 == 0:
+        print("Tasks Complete:", cur_task)
+        print("Block Accuracy: %.2f"%((block_tasks_correct/200)*100))
     print(cur_task)
