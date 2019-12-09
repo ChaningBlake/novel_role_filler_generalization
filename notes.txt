@@ -1,6 +1,9 @@
 - Working on the query part
+The three models stay the same over all time steps
+the previous time steps input is trained with the output of the current
+time step
 
-
+need to store things in wm slots during training
 
 -----------------------------------------------
 -- Notes on Mike's Code                      --
