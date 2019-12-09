@@ -102,8 +102,8 @@ while accuracy < 95 and cur_task < max_tasks:
     for i in range(3):
         for j in range(3):
             for k in range(2):
-                ig_vals[i,j,k] = ig[j].predict(args.lookup(input_combo[i,k]))
-                og_vals[i,j,k] = og[j].predict(args.lookup(input_combo[i,k])) 
+                ig_vals[i,j,k] = ig[j].predict(np.expand_dims(args.lookup(input_combo[i,k])))
+                og_vals[i,j,k] = og[j].predict(np.expand_dims(args.lookup(input_combo[i,k])))
             max_val[i,j,:] = [np.argmax(ig_vals[i,j,:]), np.argmax(og_vals[i,j,:])]
             # if the input gate is open, store encoding in wm
             if max_val[i,j,0] == 0:
@@ -130,7 +130,7 @@ while accuracy < 95 and cur_task < max_tasks:
     # j -> open or close value
     for i in range(3):
         for j in range(2):
-            og_vals[3,i,j] = og[i].predict(query_hrr[j])
+            og_vals[3,i,j] = og[i].predict(np.expand_dims(query_hrr[j]))
         # train net
         # if open and storing the correct thing in wm
         if (og_vals[3,i,0] > og_vals[3,i,1]) and (wm[i] ==
