@@ -20,7 +20,7 @@ use_sids_output:
   
 ./indirection_model.py 
 '''
-import keras
+#import keras
 import sys
 import numpy as np
 from hrr import *
@@ -144,6 +144,8 @@ while accuracy < 95 and cur_task < max_tasks:
                        default_reward)
             og[i].fit(args.lookup(input_combo[max_val[2,i,1]]), 
                        default_reward)
-
     cur_task += 1
+	if cur_task % 200 == 0:
+		print("Tasks Complete:", cur_task)
+		print("Block Accuracy: %.2f"%((block_tasks_correct/200)*100))
     print(cur_task)
