@@ -81,7 +81,7 @@ roles = ["agent", "verb", "patient"]
 action = ["*open*", "*close*"]
 for i in range(3):
     for j in range(2):
-        input_combo[i,j] = roles[i] + action[i] + "store"
+        input_combo[i,j] = roles[i] + action[j] + "store"
 # training loop
 while accuracy < 95 and cur_task < max_tasks:
 
@@ -102,8 +102,8 @@ while accuracy < 95 and cur_task < max_tasks:
     for i in range(3):
         for j in range(3):
             for k in range(2):
-                ig_vals[i,j,k] = ig.predict(input_combo[i,k])
-                og_vals[i,j,k] = og.predict(input_combo[i,k]) 
+                ig_vals[i,j,k] = ig[j].predict(args.lookup(input_combo[i,k]))
+                og_vals[i,j,k] = og[j].predict(args.lookup(input_combo[i,k])) 
             max_val[i,j,:] = [np.argmax(ig_vals[i,j,:]), np.argmax(og_vals[i,j,:])]
             # if the input gate is open, store encoding in wm
             if max_val[i,j,0] == 0:
