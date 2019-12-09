@@ -1,1 +1,25 @@
-Working on the query part
+- Working on the query part
+
+
+
+-----------------------------------------------
+-- Notes on Mike's Code                      --
+-----------------------------------------------
+He did 200 task blocks
+a task block is 200 times
+block accuracy is block_tasks_correct / 200
+
+Querying is done by a random selection
+
+correct trial on line 505
+
+block task correct if it get's the whole sequence correct
+	(line 513)
+
+loops until greater than 95 percent accuracy
+
+Taks Complete:
+Block Accuracy:
+
+Final Block Accuracy:                <-- block_tasks_correct/200 *100
+Generalization Accuracy:             <-- This is the test set

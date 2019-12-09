@@ -1,10 +1,11 @@
-#!/usr/bin/env python3
+#/usr/bin/env python3
 
 '''
 November 2019
 Blake Mullinax
 Original code from Mike Jovanovich 2017
 https://github.com/mpjovanovich/indirection
+/outputgate_no_ac_nn.r
 
 TODO: [Description]
 
@@ -17,7 +18,7 @@ interstripe_cd: Conjuction or Disjunction
 use_sids_input:
 use_sids_output:
   
-./indirection_model.py 1 100000 3 10 3 C C D F F
+./indirection_model.py 
 '''
 import keras
 import sys
@@ -82,13 +83,15 @@ for i in range(3):
     # Iterate through each of the IGs and OGs
     for j in range(2):
         ig_vals[i,j] = ig.predict(input_combo[k])
-        og_vals[i,j] = og.predict(input_combo[k])
-        
-# max of result trains the model from the previous
-# time step
-if i-1 > 0:
-    ig[i-1].fit(max(ig_vals[i,:]))
-    og[i-1].fit(max(og_vals[i,:]))
+        og_vals[i,j] = og.predict(input_combo[k]) 
+	# max of result trains the model from the previous
+	# time step
+	if i-1 > 0:
+		ig[i-1].fit(max(ig_vals[i,:]))
+		og[i-1].fit(max(og_vals[i,:]))
+
+# -- Query --
+
 
 # -- Test --
 test = args.lookup("agent*open*store")
