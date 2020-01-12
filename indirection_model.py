@@ -10,17 +10,17 @@ https://github.com/mpjovanovich/indirection
 TODO: [Description]
 
 ---Usage---
-arguments: 
+arguments:
 seed, ntasks, nstripes, nfillers, nroles,
 state_cd: Conjunction or Disjunction
 sid_cd: Conjunction or Disjunction
 interstripe_cd: Conjuction or Disjunction
 use_sids_input:
 use_sids_output:
-  
-./indirection_model.py 
+
+./indirection_model.py
 '''
-#import keras
+import keras
 import sys
 import numpy as np
 from hrr import *
@@ -42,7 +42,7 @@ encodings = ["cat", "ate", "toy"]
 ig = np.empty(3, dtype=object)
 for i in range(3):
     ig[i] = keras.Sequential()
-    # The net will be choosing the highest output for 
+    # The net will be choosing the highest output for
     # reinforcement learning, so output is just 1
     output_size = 1
     input_size = args.N
@@ -91,7 +91,7 @@ while accuracy < 95 and cur_task < max_tasks:
 
     # Size: 4 -> # of time steps (3 words plus a query)
     #       3 -> # of ig og gates,
-    #       2 -> hrr convolved with open or close, 
+    #       2 -> hrr convolved with open or close,
     ig_vals = np.empty((4,3,2), dtype=float)
     og_vals = np.empty((4,3,2), dtype=float)
     max_val = np.empty((4,3,2), dtype=int)
@@ -108,7 +108,7 @@ while accuracy < 95 and cur_task < max_tasks:
             # if the input gate is open, store encoding in wm
             if max_val[i,j,0] == 0:
                 wm[i] = encodings[i]
-                
+
             # max of result trains the model from the previous
         # time step
         if i != 0:
@@ -117,7 +117,7 @@ while accuracy < 95 and cur_task < max_tasks:
             for wm in range(3):
                 ig[wm].fit(np.expand_dims(args.lookup(input_combo[i-1,max_val[i-1,wm,0]]),axis=0),
                            max(ig_vals[i,wm,:]))
-                og[wm].fit(np.expand_dims(args.lookup(input_combo[i-1,max_val[i-1,wm,1]]),axis=0), 
+                og[wm].fit(np.expand_dims(args.lookup(input_combo[i-1,max_val[i-1,wm,1]]),axis=0),
                            max(og_vals[i,wm,:]))
 
     # -- Query --
@@ -137,12 +137,12 @@ while accuracy < 95 and cur_task < max_tasks:
         encodings[role_dict[query_role]]):
                 ig[i].fit(np.expand_dims(args.lookup(input_combo[max_val[2,i,0]]),axis=0),
                            success_reward)
-                og[i].fit(np.expand_dims(args.lookup(input_combo[max_val[2,i,1]]),axis=0), 
+                og[i].fit(np.expand_dims(args.lookup(input_combo[max_val[2,i,1]]),axis=0),
                            rsuccess_reward)
         else:
             ig[i].fit(np.expand_dims(args.lookup(input_combo[max_val[2,i,0]]),axis=0),
                        default_reward)
-            og[i].fit(np.expand_dims(args.lookup(input_combo[max_val[2,i,1]]),axis=0), 
+            og[i].fit(np.expand_dims(args.lookup(input_combo[max_val[2,i,1]]),axis=0),
                        default_reward)
     cur_task += 1
     if cur_task % 200 == 0:
