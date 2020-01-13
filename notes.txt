@@ -2,6 +2,8 @@
 -- Questions                                 --
 -----------------------------------------------
 I'm having to use expand dims on the hrr's, am I doing that properly?
+--> I'm looking at that now. He said something about surrounding it with brackets.
+I need to look at my notes about that when I get home.
 
 
 

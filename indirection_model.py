@@ -108,8 +108,8 @@ while accuracy < 95 and cur_task < max_tasks:
             # if the input gate is open, store encoding in wm
             if max_val[i,j,0] == 0:
                 wm[i] = encodings[i]
-
-            # max of result trains the model from the previous
+                
+        # max of result trains the model from the previous
         # time step
         if i != 0:
             # Given the input from the last time step, train the model with the
