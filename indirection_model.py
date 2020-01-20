@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.6
 
 '''
 November 2019
@@ -20,7 +20,7 @@ use_sids_output:
   
 ./indirection_model.py 
 '''
-#import keras
+import keras
 import sys
 import numpy as np
 from hrr import *
@@ -41,7 +41,7 @@ encodings = ["cat", "ate", "toy"]
 # Set up the input gate neural networks (one for each wm slot)
 ig = np.empty(3, dtype=object)
 for i in range(3):
-    ig[i] = keras.Sequential()
+    ig[i] = keras.models.Sequential()
     # The net will be choosing the highest output for 
     # reinforcement learning, so output is just 1
     output_size = 1
@@ -56,7 +56,7 @@ for i in range(3):
 # Set up the output gate neural network (one for each wm slot)
 og = np.empty(3, dtype=object)
 for i in range(3):
-    og[i] = keras.Sequential()
+    og[i] = keras.models.Sequential()
     # See input size and output size from the Input Gate
     og[i].add(keras.layers.Dense(output_size,
                               input_shape=[input_size]))
