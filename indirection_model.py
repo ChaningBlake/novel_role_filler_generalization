@@ -10,15 +10,15 @@ https://github.com/mpjovanovich/indirection
 TODO: [Description]
 
 ---Usage---
-arguments: 
+arguments:
 seed, ntasks, nstripes, nfillers, nroles,
 state_cd: Conjunction or Disjunction
 sid_cd: Conjunction or Disjunction
 interstripe_cd: Conjuction or Disjunction
 use_sids_input:
 use_sids_output:
-  
-./indirection_model.py 
+
+./indirection_model.py
 '''
 import keras
 import sys
@@ -31,7 +31,8 @@ hrri = hrri(N) # Identity vector for general use
 args = LTM(N, normalized=True)
 args.lookup("agent*verb*patient*open*close*store*query")
 max_tasks = 100000
-wm = np.empty(3, dtype=str)
+# These are the working memory slots
+wm = np.empty(3, dtype=object)
 
 # TODO: Get outputs from encoder and store them here
 # encodings = np.zeros((3,6))
@@ -71,10 +72,10 @@ default_reward = 0
 block_size = 200
 batch_size = 1
 epochs = 10
-validation_split = 0.5
 accuracy = 0
 cur_task = 0
 cur_block_task = 0
+
 # Store HRRs for the role*(open/close)*store combo
 input_combo = np.empty((3,2), dtype=object)
 roles = ["agent", "verb", "patient"]
@@ -82,7 +83,10 @@ action = ["*open*", "*close*"]
 for i in range(3):
     for j in range(2):
         input_combo[i,j] = roles[i] + action[j] + "store"
-# training loop
+
+# -----------------------        
+#     training loop
+# -----------------------
 while accuracy < 95 and cur_task < max_tasks:
 
     if cur_task % 200 == 0:
@@ -91,9 +95,10 @@ while accuracy < 95 and cur_task < max_tasks:
 
     # Size: 4 -> # of time steps (3 words plus a query)
     #       3 -> # of ig og gates,
-    #       2 -> hrr convolved with open or close, 
+    #       2 -> hrr convolved with open or close,
     ig_vals = np.empty((4,3,2), dtype=float)
     og_vals = np.empty((4,3,2), dtype=float)
+    # In this case, 2 -> the index of the max value of ig_vals (index 0) or og_vals
     max_val = np.empty((4,3,2), dtype=int)
 
     # i -> The current word
@@ -109,16 +114,16 @@ while accuracy < 95 and cur_task < max_tasks:
             if max_val[i,j,0] == 0:
                 wm[i] = encodings[i]
                 
-            # max of result trains the model from the previous
+        # max of result trains the model from the previous
         # time step
         if i != 0:
             # Given the input from the last time step, train the model with the
             # highest output from the current timestep
-            for wm in range(3):
-                ig[wm].fit(np.expand_dims(args.lookup(input_combo[i-1,max_val[i-1,wm,0]]),axis=0),
-                           max(ig_vals[i,wm,:]))
-                og[wm].fit(np.expand_dims(args.lookup(input_combo[i-1,max_val[i-1,wm,1]]),axis=0), 
-                           max(og_vals[i,wm,:]))
+            for wmslot in range(3):
+                ig[wmslot].fit(np.expand_dims(args.lookup(input_combo[i-1,max_val[i-1,wmslot,0]]),axis=0),
+                           np.array([max(ig_vals[i,wmslot,:])]))
+                og[wmslot].fit(np.expand_dims(args.lookup(input_combo[i-1,max_val[i-1,wmslot,1]]),axis=0),
+                           np.array([max(og_vals[i,wmslot,:])]))
 
     # -- Query --
     query_role = np.random.choice(roles)
@@ -135,15 +140,15 @@ while accuracy < 95 and cur_task < max_tasks:
         # if open and storing the correct thing in wm
         if (og_vals[3,i,0] > og_vals[3,i,1]) and (wm[i] ==
         encodings[role_dict[query_role]]):
-                ig[i].fit(np.expand_dims(args.lookup(input_combo[max_val[2,i,0]]),axis=0),
-                           success_reward)
-                og[i].fit(np.expand_dims(args.lookup(input_combo[max_val[2,i,1]]),axis=0), 
-                           rsuccess_reward)
+                ig[i].fit(np.expand_dims(args.lookup(input_combo[role_dict[query_role],max_val[2,i,0]]),axis=0),
+                           np.array([success_reward]))
+                og[i].fit(np.expand_dims(args.lookup(input_combo[role_dict[query_role],max_val[2,i,1]]),axis=0),
+                           np.array([success_reward]))
         else:
-            ig[i].fit(np.expand_dims(args.lookup(input_combo[max_val[2,i,0]]),axis=0),
-                       default_reward)
-            og[i].fit(np.expand_dims(args.lookup(input_combo[max_val[2,i,1]]),axis=0), 
-                       default_reward)
+            ig[i].fit(np.expand_dims(args.lookup(input_combo[role_dict[query_role],max_val[2,i,0]]),axis=0),
+                       np.array([default_reward]))
+            og[i].fit(np.expand_dims(args.lookup(input_combo[role_dict[query_role],max_val[2,i,1]]),axis=0),
+                       np.array([default_reward]))
     cur_task += 1
     if cur_task % 200 == 0:
         print("Tasks Complete:", cur_task)
