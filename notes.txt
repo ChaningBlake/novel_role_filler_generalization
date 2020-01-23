@@ -3,8 +3,6 @@
 -----------------------------------------------
 1. I think 143 and 145 need to be og_val instead of max val
 
-2. I need to fix every place where I use expand dimensions. Should be moved to np.array([])
-
 
 
 

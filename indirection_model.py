@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.6
+#!/usr/bin/env python3
 
 '''
 November 2019
@@ -23,6 +23,7 @@ use_sids_output:
 import keras
 import sys
 import numpy as np
+from os import system
 from hrr import *
 
 # Create hrr vectors for each of the inputs to the neural net
@@ -87,6 +88,8 @@ for i in range(3):
 # -----------------------        
 #     training loop
 # -----------------------
+system('clear')
+print("Beginning training....\n")
 while accuracy < 95 and cur_task < max_tasks:
 
     if cur_task % 200 == 0:
@@ -107,8 +110,8 @@ while accuracy < 95 and cur_task < max_tasks:
     for i in range(3):
         for j in range(3):
             for k in range(2):
-                ig_vals[i,j,k] = ig[j].predict(np.expand_dims(args.lookup(input_combo[i,k]),axis=0))
-                og_vals[i,j,k] = og[j].predict(np.expand_dims(args.lookup(input_combo[i,k]),axis=0))
+                ig_vals[i,j,k] = ig[j].predict(np.array([args.lookup(input_combo[i,k])]))
+                og_vals[i,j,k] = og[j].predict(np.array([args.lookup(input_combo[i,k])]))
             max_val[i,j,:] = [np.argmax(ig_vals[i,j,:]), np.argmax(og_vals[i,j,:])]
             # if the input gate is open, store encoding in wm
             if max_val[i,j,0] == 0:
@@ -120,10 +123,12 @@ while accuracy < 95 and cur_task < max_tasks:
             # Given the input from the last time step, train the model with the
             # highest output from the current timestep
             for wmslot in range(3):
-                ig[wmslot].fit(np.expand_dims(args.lookup(input_combo[i-1,max_val[i-1,wmslot,0]]),axis=0),
-                           np.array([max(ig_vals[i,wmslot,:])]))
-                og[wmslot].fit(np.expand_dims(args.lookup(input_combo[i-1,max_val[i-1,wmslot,1]]),axis=0),
-                           np.array([max(og_vals[i,wmslot,:])]))
+                ig[wmslot].fit(np.array([args.lookup(input_combo[i-1,max_val[i-1,wmslot,0]])]),
+                           np.array([max(ig_vals[i,wmslot,:])]),
+                           verbose=0)
+                og[wmslot].fit(np.array([args.lookup(input_combo[i-1,max_val[i-1,wmslot,1]])]),
+                           np.array([max(og_vals[i,wmslot,:])]),
+                           verbose=0)
 
     # -- Query --
     query_role = np.random.choice(roles)
@@ -135,22 +140,27 @@ while accuracy < 95 and cur_task < max_tasks:
     # j -> open or close value
     for i in range(3):
         for j in range(2):
-            og_vals[3,i,j] = og[i].predict(np.expand_dims(query_hrr[j],axis=0))
+            og_vals[3,i,j] = og[i].predict(np.array([query_hrr[j]]))
         # train net
         # if open and storing the correct thing in wm
         if (og_vals[3,i,0] > og_vals[3,i,1]) and (wm[i] ==
         encodings[role_dict[query_role]]):
-                ig[i].fit(np.expand_dims(args.lookup(input_combo[role_dict[query_role],max_val[2,i,0]]),axis=0),
-                           np.array([success_reward]))
-                og[i].fit(np.expand_dims(args.lookup(input_combo[role_dict[query_role],max_val[2,i,1]]),axis=0),
-                           np.array([success_reward]))
+                ig[i].fit(np.array([args.lookup(input_combo[role_dict[query_role],max_val[2,i,0]])]),
+                           np.array([success_reward]),
+                           verbose=0)
+                og[i].fit(np.array([args.lookup(input_combo[role_dict[query_role],max_val[2,i,1]])]),
+                           np.array([success_reward]),
+                           verbose=0)
         else:
-            ig[i].fit(np.expand_dims(args.lookup(input_combo[role_dict[query_role],max_val[2,i,0]]),axis=0),
-                       np.array([default_reward]))
-            og[i].fit(np.expand_dims(args.lookup(input_combo[role_dict[query_role],max_val[2,i,1]]),axis=0),
-                       np.array([default_reward]))
+            ig[i].fit(np.array([args.lookup(input_combo[role_dict[query_role],max_val[2,i,0]])]),
+                       np.array([default_reward]),
+                       verbose=0)
+            og[i].fit(np.array([args.lookup(input_combo[role_dict[query_role],max_val[2,i,1]])]),
+                       np.array([default_reward]),
+                       verbose=0)
     cur_task += 1
     if cur_task % 200 == 0:
+        print()
         print("Tasks Complete:", cur_task)
         print("Block Accuracy: %.2f"%((block_tasks_correct/200)*100))
-    print(cur_task)
+        print()
