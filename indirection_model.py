@@ -104,7 +104,8 @@ while accuracy < 95 and cur_task < max_tasks:
     # In this case, 2 -> the index of the max value of ig_vals (index 0) or og_vals
     max_val = np.empty((4,3,2), dtype=int)
 
-    # i -> The current word
+    # --- First Three Time Steps ---
+    # i -> The current word (time step)
     # j -> The current working memory slot
     # k -> open or close value
     for i in range(3):
@@ -151,6 +152,7 @@ while accuracy < 95 and cur_task < max_tasks:
                 og[i].fit(np.array([args.lookup(input_combo[role_dict[query_role],max_val[2,i,1]])]),
                            np.array([success_reward]),
                            verbose=0)
+                block_tasks_correct += 1
         else:
             ig[i].fit(np.array([args.lookup(input_combo[role_dict[query_role],max_val[2,i,0]])]),
                        np.array([default_reward]),
