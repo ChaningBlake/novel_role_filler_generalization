@@ -37,7 +37,11 @@ wm = np.empty(3, dtype=object)
 
 # TODO: Get outputs from encoder and store them here
 # encodings = np.zeros((3,6))
-encodings = ["cat", "ate", "toy"]
+# encodings = ["cat", "ate", "toy"]
+encodings = np.loadtxt("SG-10-train.txt", dtype=object)
+for i in range(encodings.shape[0]):
+    encodings[i] = np.array(list(encodings[i]))
+    
 
 #-- Input Gates --
 # Set up the input gate neural networks (one for each wm slot)
@@ -91,7 +95,9 @@ for i in range(3):
 system('clear')
 print("Beginning training....\n")
 while accuracy < 95 and cur_task < max_tasks:
-
+    # This is to choose a random sentence from the training
+    sample = np.random.randint(0,200)
+    
     if cur_task % 200 == 0:
         block_tasks_correct = 0
 
@@ -116,7 +122,7 @@ while accuracy < 95 and cur_task < max_tasks:
             max_val[i,j,:] = [np.argmax(ig_vals[i,j,:]), np.argmax(og_vals[i,j,:])]
             # if the input gate is open, store encoding in wm
             if max_val[i,j,0] == 0:
-                wm[i] = encodings[i]
+                wm[i] = encodings[sample][i]
                 
         # max of result trains the model from the previous
         # time step
@@ -145,7 +151,7 @@ while accuracy < 95 and cur_task < max_tasks:
         # train net
         # if open and storing the correct thing in wm
         if (og_vals[3,i,0] > og_vals[3,i,1]) and (wm[i] ==
-        encodings[role_dict[query_role]]):
+        encodings[sample][role_dict[query_role]]):
                 ig[i].fit(np.array([args.lookup(input_combo[role_dict[query_role],max_val[2,i,0]])]),
                            np.array([success_reward]),
                            verbose=0)
