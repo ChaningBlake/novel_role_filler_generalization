@@ -81,6 +81,7 @@ accuracy = 0
 cur_task = 0
 cur_block_task = 0
 block_tasks_correct = 0
+epsilon = .025
 
 # Store HRRs for the role*(open/close)*store combo
 input_combo = np.empty((4,2), dtype=object)
@@ -117,6 +118,14 @@ while accuracy < 95.0 and cur_task < max_tasks:
                 ig_vals[i,j,k] = ig[j].predict(np.array([args.lookup(input_combo[i,k])]))
                 og_vals[i,j,k] = og[j].predict(np.array([args.lookup(input_combo[i,k])]))
             max_val[i,j,:] = [np.argmax(ig_vals[i,j,:]), np.argmax(og_vals[i,j,:])]
+            # Episilon soft policy
+            # for ig
+            if np.random.random() < epsilon:
+                # flip 0 to 1 and 1 to 0
+                max_val[i,j,0] = abs(max_val[i,j,0] - 1)
+            # for og
+            if np.random.random() < epsilon:
+                max_val[i,j,1] = abs(max_val[i,j,1] - 1)
             # if the input gate is open, store encoding in wm
             if max_val[i,j,0] == 0:
                 wm[i] = encodings[sample][i]
@@ -147,6 +156,14 @@ while accuracy < 95.0 and cur_task < max_tasks:
             ig_vals[3,i,j] = ig[i].predict(np.array([query_hrr[j]]))
             og_vals[3,i,j] = og[i].predict(np.array([query_hrr[j]]))
         max_val[3,i,:] = [np.argmax(ig_vals[3,i,:]), np.argmax(og_vals[3,i,:])]
+        # Epsilon soft policy
+        # for ig 
+        if np.random.random() < epsilon:
+            # flip 0 to 1 and 1 to 0
+            max_val[3,i,0] = abs(max_val[i,j,0] - 1)
+        # for og
+        if np.random.random() < epsilon:
+            max_val[3,i,1] = abs(max_val[i,j,1] - 1)
         # train net
         # train the third time step with the max output from the query step
         ig[i].fit(np.array([args.lookup(input_combo[2, max_val[2,i,0]])]),
