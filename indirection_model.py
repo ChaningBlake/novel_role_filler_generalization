@@ -97,6 +97,7 @@ for i in range(3):
 system('clear')
 print("Beginning training....\n")
 while accuracy < 95.0 and cur_task < max_tasks:
+    counter = 0
     # This is to choose a random sentence from the training
     sample = np.random.randint(0,200)
 
@@ -148,6 +149,8 @@ while accuracy < 95.0 and cur_task < max_tasks:
     query_hrr = [args.lookup(query_role + "*query*open"),
                  args.lookup(query_role + "*query*close")]
     role_dict = {"agent":0, "verb":1, "patient":2}
+    # tracks whether a role has been taken yet. 
+    role_fulfilled = {"agent": False, "verb": False, "patient": False}
     # for each og predict query*open and query*close
     # i -> current working memory slot
     # j -> open or close value
@@ -172,9 +175,12 @@ while accuracy < 95.0 and cur_task < max_tasks:
         og[i].fit(np.array([args.lookup(input_combo[2, max_val[2,i,1]])]),
                   np.array([og_vals[3,i,max_val[3,i,1]]]),
                   verbose=0)
-        # if open and storing the correct thing in wm
+        
+        # if open 
+        # AND storing the correct thing in wm
+        # AND it hasn't been stored before
         if (og_vals[3,i,0] > og_vals[3,i,1]) and (wm[i] ==
-        encodings[sample][role_dict[query_role]]):
+        encodings[sample][role_dict[query_role]]) and (role_fulfilled[query_role] == False):
                 # args.lookup(input_combo[role_dict[query_role],max_val[2,i,0]])
                 ig[i].fit(np.array([query_hrr[max_val[3,i,0]]]),
                            np.array([success_reward]),
@@ -183,6 +189,8 @@ while accuracy < 95.0 and cur_task < max_tasks:
                            np.array([success_reward]),
                            verbose=0)
                 block_tasks_correct += 1
+                role_fulfilled[query_role] = True
+                counter += 1
         else:
             # [args.lookup(input_combo[role_dict[query_role],max_val[2,i,0]])]
             ig[i].fit(np.array([query_hrr[max_val[3,i,0]]]),
@@ -191,6 +199,8 @@ while accuracy < 95.0 and cur_task < max_tasks:
             og[i].fit(np.array([query_hrr[max_val[3,i,1]]]),
                        np.array([default_reward]),
                        verbose=0)
+    
+    print(counter)
             
     cur_task += 1
     if cur_task % 200 == 0:
