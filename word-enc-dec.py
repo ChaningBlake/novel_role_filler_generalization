@@ -16,6 +16,8 @@ cab
 
 Standard Hidden Layer Size is twice the length of the input.
 In this case, six.
+
+./word-enc-dec.py trainingSet testingSet hiddenLayerSize
 '''
 
 
