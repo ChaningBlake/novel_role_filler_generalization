@@ -53,9 +53,10 @@ for i in range(3):
     output_size = 1
     input_size = args.N
     ig[i].add(keras.layers.Dense(output_size,
-                                 input_shape=[input_size]))
-    ig[i].compile(loss=keras.losses.mse,
-                  optimizer=keras.optimizers.Adam(lr=0.001),
+                                 input_shape=[input_size],
+                                 use_bias=False))
+    ig[i].compile(loss=keras.losses.huber_loss,
+                  optimizer=keras.optimizers.SGD(lr=0.1),
                   metrics=['accuracy'])
 
 # -- Output Gates --
@@ -65,9 +66,10 @@ for i in range(3):
     og[i] = keras.models.Sequential()
     # See input size and output size from the Input Gate
     og[i].add(keras.layers.Dense(output_size,
-                              input_shape=[input_size]))
-    og[i].compile(loss=keras.losses.mse,
-                  optimizer=keras.optimizers.Adam(lr=.001),
+                                 input_shape=[input_size],
+                                 use_bias=False))
+    og[i].compile(loss=keras.losses.huber_loss,
+                  optimizer=keras.optimizers.SGD(lr=.1),
                   metrics=['accuracy'])
 
 # -- Train --
@@ -82,6 +84,8 @@ cur_task = 0
 cur_block_task = 0
 block_tasks_correct = 0
 epsilon = .025
+lmda = .9
+bias = 1.0
 
 # Store HRRs for the role*(open/close)*store combo
 input_combo = np.empty((4,2), dtype=object)
@@ -97,7 +101,6 @@ for i in range(3):
 system('clear')
 print("Beginning training....\n")
 while accuracy < 95.0 and cur_task < max_tasks:
-    counter = 0
     # This is to choose a random sentence from the training
     sample = np.random.randint(0,200)
 
@@ -116,8 +119,8 @@ while accuracy < 95.0 and cur_task < max_tasks:
     for i in range(3):
         for j in range(3):
             for k in range(2):
-                ig_vals[i,j,k] = ig[j].predict(np.array([args.lookup(input_combo[i,k])]))
-                og_vals[i,j,k] = og[j].predict(np.array([args.lookup(input_combo[i,k])]))
+                ig_vals[i,j,k] = ig[j].predict(np.array([args.lookup(input_combo[i,k])])) + bias
+                og_vals[i,j,k] = og[j].predict(np.array([args.lookup(input_combo[i,k])])) + bias
             max_val[i,j,:] = [np.argmax(ig_vals[i,j,:]), np.argmax(og_vals[i,j,:])]
             # Episilon soft policy
             # for ig
@@ -138,10 +141,10 @@ while accuracy < 95.0 and cur_task < max_tasks:
             # highest output from the current timestep
             for wmslot in range(3):
                 ig[wmslot].fit(np.array([args.lookup(input_combo[i-1,max_val[i-1,wmslot,0]])]),
-                           np.array([max(ig_vals[i,wmslot,:])]),
+                           np.array([max(ig_vals[i,wmslot,:]) - bias]),
                            verbose=0)
                 og[wmslot].fit(np.array([args.lookup(input_combo[i-1,max_val[i-1,wmslot,1]])]),
-                           np.array([max(og_vals[i,wmslot,:])]),
+                           np.array([max(og_vals[i,wmslot,:]) - bias]),
                            verbose=0)
 
     # -- Query --
@@ -149,15 +152,16 @@ while accuracy < 95.0 and cur_task < max_tasks:
     query_hrr = [args.lookup(query_role + "*query*open"),
                  args.lookup(query_role + "*query*close")]
     role_dict = {"agent":0, "verb":1, "patient":2}
-    # tracks whether a role has been taken yet. 
-    role_fulfilled = {"agent": False, "verb": False, "patient": False}
+    # tracks stats for the reward. Only one gate should be open and the role should be matched. 
+    gates_open = 0
+    role_is_matched = False
     # for each og predict query*open and query*close
     # i -> current working memory slot
     # j -> open or close value
     for i in range(3):
         for j in range(2):
-            ig_vals[3,i,j] = ig[i].predict(np.array([query_hrr[j]]))
-            og_vals[3,i,j] = og[i].predict(np.array([query_hrr[j]]))
+            ig_vals[3,i,j] = ig[i].predict(np.array([query_hrr[j]])) + bias
+            og_vals[3,i,j] = og[i].predict(np.array([query_hrr[j]])) + bias
         max_val[3,i,:] = [np.argmax(ig_vals[3,i,:]), np.argmax(og_vals[3,i,:])]
         # Epsilon soft policy
         # for ig 
@@ -170,37 +174,37 @@ while accuracy < 95.0 and cur_task < max_tasks:
         # train net
         # train the third time step with the max output from the query step
         ig[i].fit(np.array([args.lookup(input_combo[2, max_val[2,i,0]])]),
-                  np.array([ig_vals[3,i,max_val[3,i,0]]]),
+                  np.array([ig_vals[3,i,max_val[3,i,0]] - bias]),
                   verbose=0)
         og[i].fit(np.array([args.lookup(input_combo[2, max_val[2,i,1]])]),
-                  np.array([og_vals[3,i,max_val[3,i,1]]]),
+                  np.array([og_vals[3,i,max_val[3,i,1]] - bias]),
                   verbose=0)
+        
         
         # if open 
         # AND storing the correct thing in wm
         # AND it hasn't been stored before
-        if (og_vals[3,i,0] > og_vals[3,i,1]) and (wm[i] ==
-        encodings[sample][role_dict[query_role]]) and (role_fulfilled[query_role] == False):
-                # args.lookup(input_combo[role_dict[query_role],max_val[2,i,0]])
-                ig[i].fit(np.array([query_hrr[max_val[3,i,0]]]),
-                           np.array([success_reward]),
-                           verbose=0)
-                og[i].fit(np.array([query_hrr[max_val[3,i,1]]]),
-                           np.array([success_reward]),
-                           verbose=0)
-                block_tasks_correct += 1
-                role_fulfilled[query_role] = True
-                counter += 1
-        else:
-            # [args.lookup(input_combo[role_dict[query_role],max_val[2,i,0]])]
-            ig[i].fit(np.array([query_hrr[max_val[3,i,0]]]),
-                       np.array([default_reward]),
-                       verbose=0)
-            og[i].fit(np.array([query_hrr[max_val[3,i,1]]]),
-                       np.array([default_reward]),
-                       verbose=0)
-    
-    print(counter)
+        if (og_vals[3,i,0] > og_vals[3,i,1]):
+            # args.lookup(input_combo[role_dict[query_role],max_val[2,i,0]])
+                gates_open += 1
+                if (wm[i] == encodings[sample][role_dict[query_role]]):
+                    role_is_matched = True
+                
+                
+                
+    if (gates_open ==1) and (role_is_matched == True):
+        block_tasks_correct += 1
+        reward = success_reward
+    else:
+        reward = default_reward
+        
+    for i in range(3):
+        ig[i].fit(np.array([query_hrr[max_val[3,i,0]]]),
+                   np.array([reward]),
+                   verbose=0)
+        og[i].fit(np.array([query_hrr[max_val[3,i,1]]]),
+                   np.array([reward]),
+                   verbose=0)     
             
     cur_task += 1
     if cur_task % 200 == 0:
@@ -237,29 +241,37 @@ for sentence in encodings:
     for i in range(3):
         for j in range(3):
             for k in range(2):
-                ig_vals[i,j,k] = ig[j].predict(np.array([args.lookup(input_combo[i,k])]))
-                og_vals[i,j,k] = og[j].predict(np.array([args.lookup(input_combo[i,k])]))
+                ig_vals[i,j,k] = ig[j].predict(np.array([args.lookup(input_combo[i,k])])) + bias
+                og_vals[i,j,k] = og[j].predict(np.array([args.lookup(input_combo[i,k])])) + bias
             max_val[i,j,:] = [np.argmax(ig_vals[i,j,:]), np.argmax(og_vals[i,j,:])]
             # if the input gate is open, store encoding in wm
             if max_val[i,j,0] == 0:
-                wm[i] = encodings[sample][i]
+                wm[i] = sentence[i]
 
     # -- Query --
     query_role = np.random.choice(roles)
     query_hrr = [args.lookup(query_role + "*query*open"),
                  args.lookup(query_role + "*query*close")]
+    # tracks stats for success. Only one gate should be open and the role should be matched. 
+    gates_open = 0
+    role_is_matched = False
     # for each og predict query*open and query*close
     # i -> current working memory slot
     # j -> open or close value
     for i in range(3):
         for j in range(2):
-            ig_vals[3,i,j] = ig[i].predict(np.array([query_hrr[j]]))
-            og_vals[3,i,j] = og[i].predict(np.array([query_hrr[j]]))
+            ig_vals[3,i,j] = ig[i].predict(np.array([query_hrr[j]])) + bias
+            og_vals[3,i,j] = og[i].predict(np.array([query_hrr[j]])) + bias
         max_val[3,i,:] = [np.argmax(ig_vals[3,i,:]), np.argmax(og_vals[3,i,:])]
         
+        if (og_vals[3,i,0] > og_vals[3,i,1]):
+            # args.lookup(input_combo[role_dict[query_role],max_val[2,i,0]])
+            gates_open += 1
+            if (wm[i] == sentence[role_dict[query_role]]):
+                role_is_matched = True
         # if open and storing the correct thing in wm
-        if (og_vals[3,i,0] > og_vals[3,i,1]) and (wm[i] ==
-        encodings[sample][role_dict[query_role]]):
-                # args.lookup(input_combo[role_dict[query_role],max_val[2,i,0]])
-                block_tasks_correct += 1
+    if (gates_open == 1) and (role_is_matched == True):
+        # args.lookup(input_combo[role_dict[query_role],max_val[2,i,0]])
+        block_tasks_correct += 1
+                
 print("Generalization Accuracy:", block_tasks_correct)   

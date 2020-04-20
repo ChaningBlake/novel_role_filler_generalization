@@ -1,14 +1,9 @@
 -----------------------------------------------
 -- Notes                                     --
 -----------------------------------------------
-1. I think 143 and 145 need to be og_val instead of max val
-   -- Is it even training with the success value?
-   --I'm right! 155 needs to be training with the proper og max val
-   and not just og val?
-   --No I'm not.......
-   
-   Is the query step ever getting trained??????!!!??!?!?!?!
-   -- Need to train with the query hrr as input吧
+* SGD Optimizer
+* Huber Loss
+* Train up encoder on 10 word lexicon
 
 
 
@@ -17,12 +12,6 @@
 
 
 
-
-
-- Working on the query part
-The three models stay the same over all time steps
-the previous time steps input is trained with the output of the current
-time step
 
 -----------------------------------------------
 -- Notes on Mike's Code                      --
