@@ -20,6 +20,7 @@ letters = ['a','b','c','d','e',
 		   'k','l','m','n','o',
 		   'p','q','r','s','t',
 		   'u','v','w','x','y','z']
+
 nTrain = int(sys.argv[1])
 nTest = int(sys.argv[2])
 
@@ -32,7 +33,7 @@ for i in range(nTrain):
 	line = line.split()
 	for j in line[1:]:
 		j = int(j)
-		print(letters[j-1], end='')
+		print(letters[j-1], end=' ')
 	print()
 
 # Do the same for testing portion
