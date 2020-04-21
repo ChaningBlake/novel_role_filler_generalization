@@ -1,4 +1,14 @@
 -----------------------------------------------
+-- Meeting                                   --
+-----------------------------------------------
+Switched to SGD and huber loss
+    improved with SGD and even better with huber loss
+    I can use lr of .1 now
+
+I created a lexicon of 10 words, but don't we need more words to train the encoder decoder?
+
+Is it okay that I export the model as a JSON object? it works!s
+-----------------------------------------------
 -- Notes                                     --
 -----------------------------------------------
 * SGD Optimizer
@@ -7,6 +17,14 @@
 
 
 
+-----------------------------------------------
+-- Workflow                                  --
+-----------------------------------------------
+
+1. testSentences.r
+2. cat aboveOutput | ./combo2letters.py 200 100
+3. splitFiles.sh
+4. ./word-enc-dec.py trainset testset 6
 
 
 

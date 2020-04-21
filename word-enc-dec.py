@@ -17,7 +17,7 @@ cab
 Standard Hidden Layer Size is twice the length of the input.
 In this case, six.
 
-./word-enc-dec.py trainingSet testingSet hiddenLayerSize
+./word-enc-dec.py trainingSet testingSet hiddenLayerSize(6) export(0 or 1)
 '''
 
 
@@ -25,9 +25,9 @@ import keras
 import numpy as np
 import sys
 
-if len(sys.argv) != 4:
+if len(sys.argv) != 5:
     print()
-    print("Usage: %s <trainingSet> <testingSet> <hiddenLayerSize>"%sys.argv[0])
+    print("Usage: %s <trainingSet> <testingSet> <hiddenLayerSize> <export?>"%sys.argv[0])
     print()
     sys.exit(1)
 
@@ -132,7 +132,7 @@ epochs = 400
 history = model.fit([X,preY], postY,
                     batch_size=batch_size,
                     epochs=epochs,
-                    verbose=0)
+                    verbose=1)
 print('Accuracy:', model.evaluate([X,preY],postY)[1]*100.0, '%')
 
 
@@ -189,6 +189,16 @@ for i in range(len(x_test)):
         context = [h,c]
         result[:,x,:] = token
     check_decoder(result[0], mapping)
+    
+# Export models to JSON
+if (sys.argv[4] == '1'):
+    encoder_model_json = encoder_model.to_json()
+    decoder_model_json = decoder_model.to_json()
+    with open("encoder.json", "w") as encoder_file, open("decoder.json", "w") as decoder_file:
+        encoder_file.write(encoder_model_json)
+        decoder_file.write(decoder_model_json)
+    encoder_model.save_weights("encoder.h5")
+    decoder_model.save_weights("decoder.h5")
 
 trainFile.close()
 testFile.close()
