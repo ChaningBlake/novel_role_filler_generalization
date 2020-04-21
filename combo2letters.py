@@ -44,5 +44,5 @@ for i in range(nTest):
 	line = line.split()
 	for j in line[1:]:
 		j = int(j)
-		print(letters[j-1], end='')
+		print(letters[j-1], end=' ')
 	print()
