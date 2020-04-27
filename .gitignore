@@ -3,3 +3,8 @@ data/.ipynb_checkpoints/
 .ipynb_checkpoints/
 *-[0-9]*-*.*
 yelp_reviews.json
+
+decoder.h5
+decoder.json
+encoder.h5
+encoder.json
