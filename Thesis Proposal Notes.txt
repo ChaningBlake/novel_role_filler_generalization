@@ -1,0 +1,17 @@
+Specific Aims
+Intro -> motivation
+Background info
+ -> Explain work that's been done so far and their results
+    Should leave a hole where you show why your work is needed.
+Methods
+ -> How you're doing it. Training time, statistics, things you might do.
+Quickly into specific Aims
+Preliminary Results
+-> things that have already been done. Include them in the methods too.
+    Put a star on the timeline for things that have already been done.
+keep phases into "1 2 3" don't go to much deeper than that
+-> building, running (experiments), analyzing
+Plan just breaks down those three steps. goals and how you'll meet them.
+
+Deep learning book -> references for encoder decoder models. The book and the papers they cite
+

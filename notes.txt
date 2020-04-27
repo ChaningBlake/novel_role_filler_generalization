@@ -4,10 +4,27 @@
 Switched to SGD and huber loss
     improved with SGD and even better with huber loss
     I can use lr of .1 now
+    
+Got the model exported
 
 I created a lexicon of 10 words, but don't we need more words to train the encoder decoder?
 
-Is it okay that I export the model as a JSON object? it works!s
+
+Abstraction needs less data
+
+-------------------------------------------
+can put none in for the length
+data still needs to have a fixed shape, but the models will adapt to input
+100,000 word corpus
+regularization methods - any attempt to make the model generalize better -> covering up a letter
+maybe add a dropout layer
+batch size - 32
+DO Mike's first
+
+DISCUSSION - we could use other models for the words
+    word to vec
+    bert models
+    
 -----------------------------------------------
 -- Notes                                     --
 -----------------------------------------------
