@@ -17,7 +17,10 @@ cab
 Standard Hidden Layer Size is twice the length of the input.
 In this case, six.
 
-./word-enc-dec.py trainingSet testingSet hiddenLayerSize(6) export(0 or 1)
+---------------------------------------
+This Encoder Decorder will learn from a serialized array.
+
+./enc-dec-from-array.py pickledArray trainingSize hiddenLayerSize(6) export(0 or 1)
 '''
 
 
@@ -25,13 +28,22 @@ import keras
 import numpy as np
 import sys
 
-if len(sys.argv) != 5:
+if len(sys.argv) != 6:
     print()
-    print("Usage: %s <trainingSet> <testingSet> <hiddenLayerSize> <export?>"%sys.argv[0])
+    print("Usage: %s <pickledArray> <trainingSize> <hiddenLayerSize> <export?>"%sys.argv[0])
     print()
     sys.exit(1)
 
-length = 3
+# Open data sets
+try:
+    with open(sys.argv[1]) as pickledData:
+        corpus = pickle.load(pickledData)
+except:
+    print("Error: Could not open file %s"%(sys.argv[1]))
+    sys.exit(1)
+
+trainSize = int(sys.argv[2])
+length = 10
 input_length = length
 output_length = length
 
@@ -191,3 +203,6 @@ if (sys.argv[4] == '1'):
         decoder_file.write(decoder_model_json)
     encoder_model.save_weights("encoder.h5")
     decoder_model.save_weights("decoder.h5")
+
+trainFile.close()
+testFile.close()
