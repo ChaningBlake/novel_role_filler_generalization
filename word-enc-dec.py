@@ -31,9 +31,9 @@ if len(sys.argv) != 5:
     print()
     sys.exit(1)
 
-length = 3
-input_length = length
-output_length = length
+length = None
+input_length = 3
+output_length = 3
 
 # Generate one-hot encoding for alphabet
 # (including start and stop)
@@ -63,15 +63,10 @@ def check_decoder(result, mapping):
 # encode the training set
 x_train = np.loadtxt(sys.argv[1], dtype=str)
 x_train = [list(i) for i in x_train]
-x_train = np.array(x_train)
-if x_train.shape[0] > 1:
-    X=[]
-    for word in x_train:
-        X.append([mapping[sym] for sym in word])
-    X = np.array(X)
-else:
-    X = np.array([mapping[i] for i in x_train])
-X = X.reshape([len(x_train),length, 28])
+X=[]
+for word in x_train:
+    X.append([mapping[sym] for sym in word])
+X = np.array(X)
 
 # In this case, we want the output the same as the input
 # plus start and stop encodings
@@ -81,8 +76,8 @@ for input_vector in X:
 Y = np.array(Y)
 
 # Prepare inputs for Decoder
-preY = Y[:, 0:output_length+1, :]
-postY = Y[:,1:output_length+2,:]
+preY = Y[:, 0:-1, :]
+postY = Y[:,1: ,:]
 
 
 # ----Building the Net---- #

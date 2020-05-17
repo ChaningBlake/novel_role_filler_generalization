@@ -23,29 +23,30 @@ This Encoder Decorder will learn from a serialized array.
 ./enc-dec-from-array.py pickledArray trainingSize hiddenLayerSize(6) export(0 or 1)
 '''
 
-
-import keras
-import numpy as np
 import sys
-
-if len(sys.argv) != 6:
+if len(sys.argv) != 5:
     print()
     print("Usage: %s <pickledArray> <trainingSize> <hiddenLayerSize> <export?>"%sys.argv[0])
     print()
     sys.exit(1)
 
+import keras
+import numpy as np
+import pickle
+
 # Open data sets
 try:
-    with open(sys.argv[1]) as pickledData:
+    with open(sys.argv[1], "rb") as pickledData:
         corpus = pickle.load(pickledData)
 except:
     print("Error: Could not open file %s"%(sys.argv[1]))
     sys.exit(1)
 
 trainSize = int(sys.argv[2])
-length = 10
-input_length = length
-output_length = length
+length = None
+input_length = 3
+output_length = 3
+max_length = 3    # longest word in the corpus
 
 # Generate one-hot encoding for alphabet
 # (including start and stop)
@@ -53,7 +54,7 @@ alphabet = [i for i in range(28)]
 labels = keras.utils.to_categorical(alphabet, 28)
 
 # Create a Dictionary of the letters to one-hot encodings
-mapping = dict()
+mapping = {}
 for i in range(labels.shape[0]-2):
     mapping[ chr(ord('a')+i) ] = labels[i+1]
 # I know it's not necessary...but I really want the first encoding
@@ -73,17 +74,17 @@ def check_decoder(result, mapping):
 
 
 # encode the training set
-x_train = np.loadtxt(sys.argv[1], dtype=str)
+x_train = corpus[:trainSize]
 x_train = [list(i) for i in x_train]
-x_train = np.array(x_train)
-if x_train.shape[0] > 1:
-    X=[]
-    for word in x_train:
-        X.append([mapping[sym] for sym in word])
-    X = np.array(X)
-else:
-    X = np.array([mapping[i] for i in x_train])
-X = X.reshape([len(x_train),length, 28])
+X = np.empty([len(x_train), max_length, 28])
+
+for i, word in enumerate(x_train):
+    temp = [mapping[sym] for sym in word]
+    # fill end of word with stop tokens
+    if len(temp) < max_length:
+           for i in range(max_length - len(temp)):
+               temp.append(mapping['stop'])
+    X[i] = np.array(temp)
 
 # In this case, we want the output the same as the input
 # plus start and stop encodings
@@ -93,8 +94,8 @@ for input_vector in X:
 Y = np.array(Y)
 
 # Prepare inputs for Decoder
-preY = Y[:, 0:output_length+1, :]
-postY = Y[:,1:output_length+2,:]
+preY = Y[:, 0:-1, :]
+postY = Y[:,1: ,:]
 
 
 # ----Building the Net---- #
@@ -131,7 +132,7 @@ model.compile(loss = keras.losses.categorical_crossentropy,
                metrics=['accuracy'])
 
 # Train it
-batch_size = 3
+batch_size = 100
 epochs = 400
 history = model.fit([X,preY], postY,
                     batch_size=batch_size,
@@ -203,6 +204,3 @@ if (sys.argv[4] == '1'):
         decoder_file.write(decoder_model_json)
     encoder_model.save_weights("encoder.h5")
     decoder_model.save_weights("decoder.h5")
-
-trainFile.close()
-testFile.close()
