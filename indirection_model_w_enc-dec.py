@@ -35,6 +35,18 @@ max_tasks = 100000
 # These are the working memory slots
 wm = np.empty(3, dtype=object)
 
+# Import encoder and decoder model
+encoder_file = open('encoder.json', 'r')
+decoder_file = open('decoder.json', 'r')
+encoder_json = encoder_file.read()
+decoder_json = decoder_file.read()
+encoder_file.close()
+decoder_file.close()
+encoder_model = keras.models.model_from_json(encoder_json)
+decoder_model = keras.models.model_from_json(decoder_json)
+encoder_model.load_weights("encoder.h5")
+decoder_model.load_weights("decoder.h5")
+
 encodings = np.loadtxt("SG-10-train.txt", dtype=object)
 for i in range(encodings.shape[0]):
     encodings[i] = np.array(list(encodings[i]))
