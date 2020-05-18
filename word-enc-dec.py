@@ -32,8 +32,8 @@ if len(sys.argv) != 5:
     sys.exit(1)
 
 length = None
-input_length = 3
-output_length = 3
+input_length = 5
+output_length = 5
 
 # Generate one-hot encoding for alphabet
 # (including start and stop)
@@ -114,7 +114,7 @@ model.compile(loss = keras.losses.categorical_crossentropy,
                metrics=['accuracy'])
 
 # Train it
-batch_size = 3
+batch_size = 100
 epochs = 400
 history = model.fit([X,preY], postY,
                     batch_size=batch_size,
@@ -149,14 +149,10 @@ decoder_model = keras.Model(
 x_test = np.loadtxt(sys.argv[2], dtype=str)
 x_test = [list(i) for i in x_test]
 x_test = np.array(x_test)
-if x_test.shape[0] > 1:
-    test_set=[]
-    for word in x_test:
-        test_set.append([mapping[sym] for sym in word])
-    test_set = np.array(test_set)
-else:
-    test_set = np.array([mapping[i] for i in x_test])
-test_set = test_set.reshape([len(x_test),length, 28])
+test_set = []
+for word in x_test:
+    test_set.append([mapping[sym] for sym in word])
+test_set = np.array(test_set)
 
 
 
@@ -181,7 +177,7 @@ for i in range(len(x_test)):
 if (sys.argv[4] == '1'):
     encoder_model_json = encoder_model.to_json()
     decoder_model_json = decoder_model.to_json()
-    with open("encoder.json", "w") as encoder_file, open("decoder.json", "w") as decoder_file:
+    with open("encoder_len5.json", "w") as encoder_file, open("decoder_len5.json", "w") as decoder_file:
         encoder_file.write(encoder_model_json)
         decoder_file.write(decoder_model_json)
     encoder_model.save_weights("encoder.h5")
