@@ -44,9 +44,9 @@ except:
 
 trainSize = int(sys.argv[2])
 length = None
-input_length = 3
-output_length = 3
-max_length = 3    # longest word in the corpus
+input_length = 5
+output_length = 5
+max_length = 5    # longest word in the corpus
 
 # Generate one-hot encoding for alphabet
 # (including start and stop)
