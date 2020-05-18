@@ -1,16 +1,10 @@
 -----------------------------------------------
 -- Meeting                                   --
 -----------------------------------------------
-Switched to SGD and huber loss
-    improved with SGD and even better with huber loss
-    I can use lr of .1 now
-    
-Got the model exported
+Trained up encoder-decoder with mikes code. That was with 5 letter words.
 
-I created a lexicon of 10 words, but don't we need more words to train the encoder decoder?
+When I trained up the encoder decoder on the large data set, 
 
-
-Abstraction needs less data
 
 -------------------------------------------
 can put none in for the length
@@ -24,6 +18,8 @@ DO Mike's first
 DISCUSSION - we could use other models for the words
     word to vec
     bert models
+    
+Abstraction needs less data
     
 -----------------------------------------------
 -- Notes                                     --
