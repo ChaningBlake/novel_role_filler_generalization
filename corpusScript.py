@@ -13,16 +13,16 @@ print("Done!")
     
 corpus = []
 count = 0
-for review in review_data:
+for i, review in enumerate(review_data):
     text = review["text"]
     # remove punctuation
     text = re.sub("[^a-zA-Z ]+", "", text).lower()
     text = text.split()
     for word in text:
-        if word not in corpus:
+        if word not in corpus and len(word) > 9:
             corpus.append(word)
             count += 1
-    if count % 1000 == 0:        
+    if i%100 == 0:
         print(count)
     if count > 100500:
         break
@@ -33,5 +33,5 @@ print("-----------------")
 for i in range(100):
     print(corpus[i])
     
-with open("corpus.txt", "wb") as corpus_file:
+with open("long_words2", "wb") as corpus_file:
     pickle.dump(corpus, corpus_file)
