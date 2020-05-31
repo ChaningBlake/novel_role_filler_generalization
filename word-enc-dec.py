@@ -20,59 +20,34 @@ In this case, six.
 ./word-enc-dec.py trainingSet testingSet hiddenLayerSize(6) export(0 or 1)
 '''
 
-
-import keras
-import numpy as np
 import sys
-
 if len(sys.argv) != 5:
     print()
     print("Usage: %s <trainingSet> <testingSet> <hiddenLayerSize> <export?>"%sys.argv[0])
     print()
     sys.exit(1)
+import keras
+import numpy as np
+import encode
+
 
 length = None
 input_length = 5
 output_length = 5
-
-# Generate one-hot encoding for alphabet
-# (including start and stop)
-alphabet = [i for i in range(28)]
-labels = keras.utils.to_categorical(alphabet, 28)
-
-# Create a Dictionary of the letters to one-hot encodings
-mapping = dict()
-for i in range(labels.shape[0]-2):
-    mapping[ chr(ord('a')+i) ] = labels[i+1]
-# I know it's not necessary...but I really want the first encoding
-# to be start and the last one to be stop
-mapping["start"] = labels[0]
-mapping["stop"] = labels[27]
-
-
-# A little function to check the decoder at the end
-def check_decoder(result, mapping):
-    for letter in result:
-        for key in mapping:
-            if np.array_equal(mapping[key],letter):
-                print(key, end='')
-    print()
-    return
-
 
 # encode the training set
 x_train = np.loadtxt(sys.argv[1], dtype=str)
 x_train = [list(i) for i in x_train]
 X=[]
 for word in x_train:
-    X.append([mapping[sym] for sym in word])
+    X.append(encode.onehot(word))
 X = np.array(X)
 
 # In this case, we want the output the same as the input
 # plus start and stop encodings
 Y = []
 for input_vector in X:
-    Y.append(np.vstack([mapping["start"], input_vector, mapping["stop"]]))
+    Y.append(np.vstack([enocde.onehot("start"), input_vector, encode.onehot("stop")]))
 Y = np.array(Y)
 
 # Prepare inputs for Decoder
@@ -115,7 +90,7 @@ model.compile(loss = keras.losses.categorical_crossentropy,
 
 # Train it
 batch_size = 100
-epochs = 400
+epochs = 50
 history = model.fit([X,preY], postY,
                     batch_size=batch_size,
                     epochs=epochs,
@@ -151,7 +126,7 @@ x_test = [list(i) for i in x_test]
 x_test = np.array(x_test)
 test_set = []
 for word in x_test:
-    test_set.append([mapping[sym] for sym in word])
+    test_set.append(encode.onehot(word))
 test_set = np.array(test_set)
 
 
@@ -161,7 +136,7 @@ for i in range(len(x_test)):
     # Get the context for just a single word
     context = encoder_model.predict(test_set[i:i+1])
     # Prep a sarting token
-    token = np.array(mapping["start"])
+    token = np.array(encode.onehot("start"))
     token = token.reshape([1, 1, token.shape[0]])
     
     # Get decoder's output
@@ -171,7 +146,7 @@ for i in range(len(x_test)):
         token = np.round(out)
         context = [h,c]
         result[:,x,:] = token
-    check_decoder(result[0], mapping)
+    encode.check_decoder(result[0])
     
 # Export models to JSON
 if (sys.argv[4] == '1'):
@@ -180,5 +155,5 @@ if (sys.argv[4] == '1'):
     with open("encoder_len5.json", "w") as encoder_file, open("decoder_len5.json", "w") as decoder_file:
         encoder_file.write(encoder_model_json)
         decoder_file.write(decoder_model_json)
-    encoder_model.save_weights("encoder.h5")
-    decoder_model.save_weights("decoder.h5")
+    encoder_model.save_weights("encoder_len5.h5")
+    decoder_model.save_weights("decoder_len5.h5")

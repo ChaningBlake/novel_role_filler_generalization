@@ -1,9 +1,42 @@
 -----------------------------------------------
 -- Meeting                                   --
 -----------------------------------------------
-Trained up encoder-decoder with mikes code. That was with 5 letter words.
+training len 10 words - upped the hidden layer size and it worked!
+-- Speed of training increased greatly across all lengths of words
 
-When I trained up the encoder decoder on the large data set, 
+Doing an encoder - encoder model
+-- Do I create an HRR for each representation that the encoder produces?
+   -- If not then how do I convolve it with the role?
+
+Working on using the trained encoder/decoder in the working memory model. Need to write some wrapper functions.
+
+
+
+State and output pieces just repeated three times
+Because of store store query
+Token role store
+no token role query
+
+John agent store -> John
+
+Output layer on decoder on softmax because that's a probability distribution
+
+*Have to use linear output. Because they are continuous vectors.
+*Make sure you use mean squared error as well
+--- This is because of the continuous representations
+
+
+
+How do we asses how it's doing?
+----------------------------------
+Calculate eucidean distance between what you get and the target, and all potential vectors. Whichever has the smallest distance is the one we say it was trying to output.
+
+
+Recurrecy doesn't need a timing signal. 
+
+
+
+
 
 
 -------------------------------------------
@@ -21,14 +54,6 @@ DISCUSSION - we could use other models for the words
     
 Abstraction needs less data
     
------------------------------------------------
--- Notes                                     --
------------------------------------------------
-* SGD Optimizer
-* Huber Loss
-* Train up encoder on 10 word lexicon
-
-
 
 -----------------------------------------------
 -- Workflow                                  --
