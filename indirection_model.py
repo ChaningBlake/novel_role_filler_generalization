@@ -25,6 +25,7 @@ import sys
 import numpy as np
 from os import system
 from hrr import *
+import pickle
 
 # Create hrr vectors for each of the inputs to the neural net
 N = 1024
@@ -35,6 +36,7 @@ max_tasks = 100000
 # These are the working memory slots
 wm = np.empty(3, dtype=object)
 
+# encodings represent one of the words to be used from the set for the encoder/decoder
 encodings = np.loadtxt("SG-10-train.txt", dtype=object)
 for i in range(encodings.shape[0]):
     encodings[i] = np.array(list(encodings[i]))

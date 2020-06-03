@@ -1,7 +1,29 @@
 -----------------------------------------------
 -- Meeting                                   --
 -----------------------------------------------
-Trained up encoder-decoder with mikes code. That was with 5 letter words.
+
+State and output pieces just repeated three times
+Because of store store query
+Token role store
+no token role query
+
+John agent store -> John
+
+Output layer on decoder on softmax because that's a probability distribution
+
+*Have to use linear output. Because they are continuous vectors.
+*Make sure you use mean squared error as well
+--- This is because of the continuous representations
+
+
+
+How do we asses how it's doing?
+----------------------------------
+Calculate eucidean distance between what you get and the target, and all potential vectors. Whichever has the smallest distance is the one we say it was trying to output.
+
+
+Recurrecy doesn't need a timing signal. 
+
 
 When I trained up the encoder decoder on the large data set, 
 

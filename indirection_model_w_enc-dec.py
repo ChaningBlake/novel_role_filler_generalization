@@ -25,6 +25,8 @@ import sys
 import numpy as np
 from os import system
 from hrr import *
+import pickle
+import encode # My module
 
 # Create hrr vectors for each of the inputs to the neural net
 N = 1024
@@ -36,20 +38,25 @@ max_tasks = 100000
 wm = np.empty(3, dtype=object)
 
 # Import encoder and decoder model
-encoder_file = open('encoder.json', 'r')
-decoder_file = open('decoder.json', 'r')
-encoder_json = encoder_file.read()
-decoder_json = decoder_file.read()
-encoder_file.close()
-decoder_file.close()
+with open('encoder_len5.json', 'r') as encoder_file, open('decoder_len5.json', 'r') as decoder_file:
+    encoder_json = encoder_file.read()
+    decoder_json = decoder_file.read()
 encoder_model = keras.models.model_from_json(encoder_json)
 decoder_model = keras.models.model_from_json(decoder_json)
-encoder_model.load_weights("encoder.h5")
-decoder_model.load_weights("decoder.h5")
+encoder_model.load_weights("encoder_len5.h5")
+decoder_model.load_weights("decoder_len5.h5")
 
-encodings = np.loadtxt("SG-10-train.txt", dtype=object)
-for i in range(encodings.shape[0]):
-    encodings[i] = np.array(list(encodings[i]))
+roles = np.loadtxt("SG-10-train.txt", dtype=object)
+for i in range(roles.shape[0]):
+    roles[i] = np.array(list(roles[i]))
+
+    
+corpus = np.loadtxt("len5_10000-train.txt", dtype=object)    
+# Assign one of the words from the test set to each letter from the roles.
+letters_to_word = {}
+for letter in ['a','b','c','d','e','f','g','h','i','j']:
+    word = corpus[np.random.randint(0,len(corpus)-1)]
+    letters_to_word[letter] = encode.onehot(word)
     
 
 #-- Input Gates --
@@ -98,11 +105,11 @@ bias = 1.0
 
 # Store HRRs for the role*(open/close)*store combo
 input_combo = np.empty((4,2), dtype=object)
-roles = ["agent", "verb", "patient"]
+role_names = ["agent", "verb", "patient"]
 action = ["*open*", "*close*"]
 for i in range(3):
     for j in range(2):
-        input_combo[i,j] = roles[i] + action[j] + "store"
+        input_combo[i,j] = role_names[i] + action[j] + "store"
 
 # -----------------------        
 #     training loop
@@ -141,7 +148,8 @@ while accuracy < 95.0 and cur_task < max_tasks:
                 max_val[i,j,1] = abs(max_val[i,j,1] - 1)
             # if the input gate is open, store encoding in wm
             if max_val[i,j,0] == 0:
-                wm[i] = encodings[sample][i]
+                word_to_encode = letters_to_word[roles[sample][i]]
+                wm[i] = encoder_model.predict(np.array([word_to_encode]))
                 
         # max of result trains the model from the previous
         # time step
@@ -157,7 +165,7 @@ while accuracy < 95.0 and cur_task < max_tasks:
                            verbose=0)
 
     # -- Query --
-    query_role = np.random.choice(roles)
+    query_role = np.random.choice(role_names)
     query_hrr = [args.lookup(query_role + "*query*open"),
                  args.lookup(query_role + "*query*close")]
     role_dict = {"agent":0, "verb":1, "patient":2}
@@ -196,7 +204,19 @@ while accuracy < 95.0 and cur_task < max_tasks:
         if (og_vals[3,i,0] > og_vals[3,i,1]):
             # args.lookup(input_combo[role_dict[query_role],max_val[2,i,0]])
                 gates_open += 1
-                if (wm[i] == encodings[sample][role_dict[query_role]]):
+                # Decode what's in memory
+                token = np.array(encode.onehot("start"))
+                token = token.reshape([1, 1, token.shape[0]])
+                result = np.zeros([1,6,28])
+                output_length = 5
+                for x in range(output_length+1):
+                    out,h,c = decoder_model.predict([token]+wm[i])
+                    token = np.round(out)
+                    context = [h,c]
+                    result[0,x,:] = token
+                decoded_word = encode.check(result[0])
+                print(decoded_word, encode.check(letters_to_word[roles[sample][role_dict[query_role]]]))
+                if (decoded_word == encode.check(letters_to_word[roles[sample][role_dict[query_role]]])):
                     role_is_matched = True
                 
                 
@@ -230,8 +250,8 @@ while accuracy < 95.0 and cur_task < max_tasks:
 #   Testing loop
 # -----------------
 block_tasks_correct = 0
-encodings = np.loadtxt("SG-10-test.txt", dtype=object)
-for sentence in encodings:
+roles = np.loadtxt("SG-10-test.txt", dtype=object)
+for sentence in roles:
     # This is to choose a random sentence from the training
     sample = np.random.randint(0,100)
 
@@ -255,10 +275,11 @@ for sentence in encodings:
             max_val[i,j,:] = [np.argmax(ig_vals[i,j,:]), np.argmax(og_vals[i,j,:])]
             # if the input gate is open, store encoding in wm
             if max_val[i,j,0] == 0:
-                wm[i] = sentence[i]
+                word_to_encode = letters_to_word[sentence[i]]
+                wm[i] = encoder_model.predict(word_to_encode)
 
     # -- Query --
-    query_role = np.random.choice(roles)
+    query_role = np.random.choice(role_names)
     query_hrr = [args.lookup(query_role + "*query*open"),
                  args.lookup(query_role + "*query*close")]
     # tracks stats for success. Only one gate should be open and the role should be matched. 
@@ -276,7 +297,9 @@ for sentence in encodings:
         if (og_vals[3,i,0] > og_vals[3,i,1]):
             # args.lookup(input_combo[role_dict[query_role],max_val[2,i,0]])
             gates_open += 1
-            if (wm[i] == sentence[role_dict[query_role]]):
+            decoded_word = decoder_model.predict(wm[i])
+            
+            if (decoded_word == letters_to_word[sentence[role_dict[query_role]]]):
                 role_is_matched = True
         # if open and storing the correct thing in wm
     if (gates_open == 1) and (role_is_matched == True):
