@@ -44,9 +44,9 @@ except:
 
 trainSize = int(sys.argv[2])
 length = None
-input_length = 10
-output_length = 10
-max_length = 10    # longest word in the corpus
+input_length = 5
+output_length = 5
+max_length = 5    # longest word in the corpus
 
 # Generate one-hot encoding for alphabet
 # (including start and stop)
@@ -132,7 +132,7 @@ model.compile(loss = keras.losses.categorical_crossentropy,
                metrics=['accuracy'])
 
 # Train it
-batch_size = 1000
+batch_size = 100
 epochs = 400
 history = model.fit([X,preY], postY,
                     batch_size=batch_size,
