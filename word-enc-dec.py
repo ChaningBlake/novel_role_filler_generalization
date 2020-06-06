@@ -21,15 +21,14 @@ In this case, six.
 '''
 
 
-import keras
-import numpy as np
 import sys
-
 if len(sys.argv) != 5:
     print()
     print("Usage: %s <trainingSet> <testingSet> <hiddenLayerSize> <export?>"%sys.argv[0])
     print()
     sys.exit(1)
+import keras
+import numpy as np
 
 length = None
 input_length = 5
@@ -115,7 +114,7 @@ model.compile(loss = keras.losses.categorical_crossentropy,
 
 # Train it
 batch_size = 100
-epochs = 400
+epochs = 50
 history = model.fit([X,preY], postY,
                     batch_size=batch_size,
                     epochs=epochs,
@@ -180,5 +179,5 @@ if (sys.argv[4] == '1'):
     with open("encoder_len5.json", "w") as encoder_file, open("decoder_len5.json", "w") as decoder_file:
         encoder_file.write(encoder_model_json)
         decoder_file.write(decoder_model_json)
-    encoder_model.save_weights("encoder.h5")
-    decoder_model.save_weights("decoder.h5")
+    encoder_model.save_weights("encoder_len5.h5")
+    decoder_model.save_weights("decoder_len5.h5")

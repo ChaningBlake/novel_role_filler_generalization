@@ -201,7 +201,7 @@ while accuracy < 95.0 and cur_task < max_tasks:
         # if open 
         # AND storing the correct thing in wm
         # AND it hasn't been stored before
-        if (og_vals[3,i,0] > og_vals[3,i,1]):
+        if (og_vals[3,i,0] > og_vals[3,i,1]) and wm[i] != None:
             # args.lookup(input_combo[role_dict[query_role],max_val[2,i,0]])
                 gates_open += 1
                 # Decode what's in memory
@@ -209,13 +209,13 @@ while accuracy < 95.0 and cur_task < max_tasks:
                 token = token.reshape([1, 1, token.shape[0]])
                 result = np.zeros([1,6,28])
                 output_length = 5
+                context = wm[i]
                 for x in range(output_length+1):
-                    out,h,c = decoder_model.predict([token]+wm[i])
+                    out,h,c = decoder_model.predict([token]+context)
                     token = np.round(out)
                     context = [h,c]
                     result[0,x,:] = token
                 decoded_word = encode.check(result[0])
-                print(decoded_word, encode.check(letters_to_word[roles[sample][role_dict[query_role]]]))
                 if (decoded_word == encode.check(letters_to_word[roles[sample][role_dict[query_role]]])):
                     role_is_matched = True
                 
@@ -275,7 +275,7 @@ for sentence in roles:
             max_val[i,j,:] = [np.argmax(ig_vals[i,j,:]), np.argmax(og_vals[i,j,:])]
             # if the input gate is open, store encoding in wm
             if max_val[i,j,0] == 0:
-                word_to_encode = letters_to_word[sentence[i]]
+                word_to_encode = np.array([letters_to_word[sentence[i]]])
                 wm[i] = encoder_model.predict(word_to_encode)
 
     # -- Query --
@@ -297,9 +297,19 @@ for sentence in roles:
         if (og_vals[3,i,0] > og_vals[3,i,1]):
             # args.lookup(input_combo[role_dict[query_role],max_val[2,i,0]])
             gates_open += 1
-            decoded_word = decoder_model.predict(wm[i])
-            
-            if (decoded_word == letters_to_word[sentence[role_dict[query_role]]]):
+            # Decode what's in memory
+            token = np.array(encode.onehot("start"))
+            token = token.reshape([1, 1, token.shape[0]])
+            result = np.zeros([1,6,28])
+            output_length = 5
+            context = wm[i]
+            for x in range(output_length+1):
+                out,h,c = decoder_model.predict([token]+context)
+                token = np.round(out)
+                context = [h,c]
+                result[0,x,:] = token
+            decoded_word = encode.check(result[0])
+            if (decoded_word == encode.check(letters_to_word[roles[sample][role_dict[query_role]]])):
                 role_is_matched = True
         # if open and storing the correct thing in wm
     if (gates_open == 1) and (role_is_matched == True):
