@@ -2,41 +2,27 @@
 -- Meeting                                   --
 -----------------------------------------------
 
-State and output pieces just repeated three times
-Because of store store query
-Token role store
-no token role query
 
-John agent store -> John
 
-Output layer on decoder on softmax because that's a probability distribution
-
+For Outer Encoder-Decoder
+--------------------------------------------------------
 *Have to use linear output. Because they are continuous vectors.
 *Make sure you use mean squared error as well
 --- This is because of the continuous representations
 
-
-
-How do we asses how it's doing?
-----------------------------------
+---How do we asses how it's doing?
 Calculate eucidean distance between what you get and the target, and all potential vectors. Whichever has the smallest distance is the one we say it was trying to output.
 
 
-Recurrecy doesn't need a timing signal. 
 
 
-When I trained up the encoder decoder on the large data set, 
+Recurrecy doesn't need a timing signal.  
 
 
 -------------------------------------------
-can put none in for the length
-data still needs to have a fixed shape, but the models will adapt to input
-100,000 word corpus
 regularization methods - any attempt to make the model generalize better -> covering up a letter
 maybe add a dropout layer
 batch size - 32
-DO Mike's first
-
 DISCUSSION - we could use other models for the words
     word to vec
     bert models
