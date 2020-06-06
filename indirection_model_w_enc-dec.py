@@ -309,7 +309,7 @@ for sentence in roles:
                 context = [h,c]
                 result[0,x,:] = token
             decoded_word = encode.check(result[0])
-            if (decoded_word == encode.check(letters_to_word[roles[sample][role_dict[query_role]]])):
+            if (decoded_word == encode.check(letters_to_word[sentence[i]])):
                 role_is_matched = True
         # if open and storing the correct thing in wm
     if (gates_open == 1) and (role_is_matched == True):
