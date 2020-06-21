@@ -1,3 +1,9 @@
+'''
+June 2020
+@author: Blake Mullinax
+
+A set of functions to help with encoding
+'''
 #!/usr/bin/env python3
 import keras
 import numpy as np
