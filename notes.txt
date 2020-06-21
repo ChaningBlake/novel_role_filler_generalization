@@ -2,6 +2,39 @@
 -- Meeting                                   --
 -----------------------------------------------
 
+IF multiple gates open, flip a coin for which one oto decode
+Could average the outputs and feed them in
+add them together and normalize them
+
+Empty is two vectors of zeros. If others are none you shouldn't do the average
+
+**Two input layers
+-- Reslice the data split them into two sets for input. 
+-- Output needs to be different dimensions as well
+
+Use the encoding for the start and stop tokens as the start and stop tokens for the inner model
+***Or he says I should try adding an extra input layer of just size 2.
+
+four time steps and the last one produces the stop token with a bunch of zeros
+
+shelve data structure -> Data structure like a dictionary but on disk
+-> Tieing the words to the string
+--> Keep everything faster so you don't have to encode every time.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 For Outer Encoder-Decoder
