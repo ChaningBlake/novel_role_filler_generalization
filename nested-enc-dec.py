@@ -14,14 +14,14 @@ import encode # My module
 import pickle, random, string
 
 
-# Import inner decoder
+# Import outer decoder
 with open('encoder_len5.json', 'r') as encoder_file, open('decoder_len5.json', 'r') as decoder_file:
     encoder_json = encoder_file.read()
     decoder_json = decoder_file.read()
-inner_encoder = keras.models.model_from_json(encoder_json)
-inner_decoder = keras.models.model_from_json(decoder_json)
-inner_encoder.load_weights("encoder_len5.h5")
-inner_decoder.load_weights("decoder_len5.h5")
+outer_encoder = keras.models.model_from_json(encoder_json)
+outer_decoder = keras.models.model_from_json(decoder_json)
+outer_encoder.load_weights("encoder_len5.h5")
+outer_decoder.load_weights("decoder_len5.h5")
 
 # Prepare input
 corpus = np.loadtxt(sys.argv[1], dtype=object)
@@ -36,7 +36,7 @@ for sentence in roles:
     x_train.append(np.array([mapping[letter] for letter in sentence]))
 
 # Convert encodings into gestalt representations
-X = [inner_encoder.predict(word) for word in x_train]
+X = [outer_encoder.predict(word) for word in x_train]
 X = np.array(X)
 
 
@@ -44,7 +44,7 @@ X = np.array(X)
 
 
 
-# Construct Outer Encoder Decoder
+# Construct Inner Encoder Decoder
 # ----------------------------------
 # Encoder Construction
 hidden_size = 50
@@ -106,14 +106,14 @@ decoder_model = keras.Model(
 
 
 '''
-# Get result from outer decoder
+# Get result from inner decoder
 context = pass
 token = np.array(encode.onehot("start"))
 token = token.reshape([1, 1, token.shape[0]])
 result = np.zeros([1,6,28])
 output_length = 5
 for x in range(output_length+1):
-    out,h,c = inner_decoder.predict([token]+context)
+    out,h,c = outer_decoder.predict([token]+context)
     token = np.round(out)
     context = [h,c]
     result[0,x,:] = token
