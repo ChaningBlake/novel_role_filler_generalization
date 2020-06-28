@@ -15,13 +15,13 @@ import pickle, random, string
 
 
 # Import inner decoder
-with open('encoder_len5.json', 'r') as encoder_file, open('decoder_len5.json', 'r') as decoder_file:
+with open('models/encoder_len5.json', 'r') as encoder_file, open('models/decoder_len5.json', 'r') as decoder_file:
     encoder_json = encoder_file.read()
     decoder_json = decoder_file.read()
 inner_encoder = keras.models.model_from_json(encoder_json)
 inner_decoder = keras.models.model_from_json(decoder_json)
-inner_encoder.load_weights("encoder_len5.h5")
-inner_decoder.load_weights("decoder_len5.h5")
+inner_encoder.load_weights("models/encoder_len5.h5")
+inner_decoder.load_weights("models/decoder_len5.h5")
 
 # Prepare input
 corpus = np.loadtxt(sys.argv[1], dtype=object)
