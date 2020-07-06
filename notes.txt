@@ -2,16 +2,35 @@
 -- Meeting                                   --
 -----------------------------------------------
 
+Bar graph with fractions of correct
+mean performance and standard error
+
+box plots don't assume normality
+but a lot of times we assume normality
+
+run ten models on each
+
+assumptions and usage on wikipedia page
+
+seperate the data and the code that makes the plots
+
+
+
+
+
+
+
+
+
+
+
+
 IF multiple gates open, flip a coin for which one oto decode
 Could average the outputs and feed them in
 add them together and normalize them
 
 Empty is two vectors of zeros. If others are none you shouldn't do the average
 
-**Two input layers
--- Reslice the data split them into two sets for input. 
--- Output needs to be different dimensions as well
-***Or he says I should try adding an extra input layer of just size 2.
 
 four time steps and the last one produces the stop token with a bunch of zeros
 
@@ -35,11 +54,6 @@ S/S output should be sigmoid
 Usually use binary cross entropy as loss function
 
 supply loss function as list to give different layers different functions
-
-
-
-
-
 
 
 
