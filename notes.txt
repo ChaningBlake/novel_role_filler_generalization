@@ -8,14 +8,6 @@ mean performance and standard error
 box plots don't assume normality
 but a lot of times we assume normality
 
-run ten models on each
-
-assumptions and usage on wikipedia page
-
-seperate the data and the code that makes the plots
-
-
-
 
 
 
@@ -40,23 +32,11 @@ shelve data structure -> Data structure like a dictionary but on disk
 
 
 
-
-Questions:
-Decoder hidden layer returns sequences. Why? Difference with return state?
-Start token at the same time as the first tokens right?
-No! Goes by itself, give it zero for everything else
-PostY has stop token
-All zeros for the word once you split it the model
-
-
-******
-S/S output should be sigmoid
+****
+Start/Stop output should be sigmoid
 Usually use binary cross entropy as loss function
 
 supply loss function as list to give different layers different functions
-
-
-
 
 
 
@@ -66,14 +46,6 @@ For Outer Encoder-Decoder
 *Have to use linear output. Because they are continuous vectors.
 *Make sure you use mean squared error as well
 --- This is because of the continuous representations
-
----How do we asses how it's doing?
-Calculate eucidean distance between what you get and the target, and all potential vectors. Whichever has the smallest distance is the one we say it was trying to output.
-
-
-
-
-Recurrecy doesn't need a timing signal.  
 
 
 -------------------------------------------
@@ -89,9 +61,6 @@ Abstraction needs less data
 -----------------------------------------------
 -- Notes                                     --
 -----------------------------------------------
-* SGD Optimizer
-* Huber Loss
-* Train up encoder on 10 word lexicon
 
 
 
