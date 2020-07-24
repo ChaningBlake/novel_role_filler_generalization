@@ -30,14 +30,18 @@ corpus = np.loadtxt(sys.argv[1], dtype=object)
 
 # Each letter that represents a role will be mapped to the encoding for a
 # random word from the corpus.
-mapping = {}
+encoded_mapping = {}
+selected_words = {}
 for letter in string.ascii_lowercase[:10]:
+    # Store the letter with the word for use in testing
     onehot = encode.onehot(random.choice(corpus))
-    mapping[letter] = outer_encoder.predict(np.array([onehot]))
+    selected_words[letter] = np.concatenate((onehot.copy(), encode.onehot("stop").reshape(1,28)))
+    encoded_mapping[letter] = outer_encoder.predict(np.array([onehot]))
+    
 x_train = []
 roles = np.loadtxt(sys.argv[2], dtype=object)
 for sentence in roles:
-    x_train.append([mapping[letter] for letter in sentence])
+    x_train.append([encoded_mapping[letter] for letter in sentence])
 x_train = np.array(x_train) # shape (n, 3, 2, 1, 50)
 t1 = x_train[:,:,0,0,:] # new shape (n,3,50)
 t2 = x_train[:,:,1,0,:] # " '' "
@@ -61,7 +65,7 @@ post_t3[:,3,:] = s_s["stop"]
 # Construct Inner Encoder Decoder
 # ----------------------------------
 # Encoder Construction
-hidden_size = 100
+hidden_size = 300
 encoder_input_t1 = keras.layers.Input(shape=(None, t1.shape[2]), name="enc_token_1")
 encoder_input_t2 = keras.layers.Input(shape=(None, t1.shape[2]), name="enc_token_2")
 encoder_input = keras.layers.Concatenate()([encoder_input_t1, encoder_input_t2])
@@ -108,7 +112,7 @@ epochs = 1600
 history = model.fit(model_input, model_target,
                     batch_size=batch_size,
                     epochs=epochs,
-                    verbose=1)
+                    verbose=0)
 accuracy = model.evaluate(model_input, model_target)
 # use `model.metrics_names` to get indices for accuracy:
 print('T1 Accuracy:', accuracy[4]*100.0, '%')
@@ -147,10 +151,13 @@ keras.utils.plot_model(decoder_model, to_file="new_decoder.png", show_shapes=Tru
 # Each letter that represents a role will be mapped to the encoding for a
 # random word from the corpus.
 x_test = []
+correct_result = [] # used to get accuracy at end
 roles = np.loadtxt(sys.argv[3], dtype=object)
 for sentence in roles:
-    x_test.append([mapping[letter] for letter in sentence])
+    x_test.append([encoded_mapping[letter] for letter in sentence])
+    correct_result.append([selected_words[letter] for letter in sentence])
 x_test = np.array(x_test) # shape (n, 3, 2, 1, 50)
+correct_result = np.array(correct_result)
 t1 = x_test[:,:,0,0,:] # new shape (n,3,50)
 t2 = x_test[:,:,1,0,:] # " '' "
 # 4 time steps. pre
@@ -161,6 +168,7 @@ pre_t2 = np.concatenate((np.zeros((x_test.shape[0],1,50)), t2), axis = 1)
 pre_t3 = np.zeros((x_test.shape[0], 4, 2))
 pre_t3[:,0,:] = s_s["start"]
 
+outer_result = np.empty((len(x_test),3,6,28))
 for i, sentence in enumerate(x_test):
     context = encoder_model.predict({"enc_token_1": t1[i:i+1], "enc_token_2": t2[i:i+1]})
     dec_t1 = np.zeros((1,1,50))
@@ -185,36 +193,39 @@ for i, sentence in enumerate(x_test):
     
     # obtain the result from the outer decoder
     output_length = 5
-    outer_result = np.zeros([3,6,28])
     for word in range(3):
         context = []
         context.append(inner_result[word,0:1,:])
         context.append(inner_result[word,1:2,:])
         token = np.array(encode.onehot("start"))
         token = token.reshape([1, 1, token.shape[0]])
-        print(context)
         for letter in range(output_length + 1):
             out, h, c = outer_decoder.predict([token] + context)
             token = np.round(out)
             context = [h,c]
-            outer_result[word, letter, :] = token
-    break
-print(outer_result)
-for word in outer_result:
-    print(encode.check(word))
+            outer_result[i, word, letter, :] = token
+            
 
+# Obtain Accuracy
+word_accuracy = 0
+letter_accuracy = 0
+for answer, response in zip(correct_result, outer_result):
+    # check each word
+    for word in range(3):
+        if np.array_equal(answer[word,:,:], response[word,:,:]):
+            word_accuracy += 1
+            letter_accuracy += 6
+        #check each letter
+        else:
+            for letter in range(6):
+                if np.array_equal(answer[word,letter,:], response[word,letter,:]):
+                    letter_accuracy += 1
+                    
+word_accuracy /= float(correct_result.shape[0] * 3)
+letter_accuracy /= float(correct_result.shape[0] * 3 * 6)
 
-#
-## Get result from inner decoder
-#context = encoder_model 
-#token = np.array(encode.onehot("start"))
-#token = token.reshape([1, 1, token.shape[0]])
-#result = np.zeros([1,6,28])
-#output_length = 5
-#for x in range(output_length+1):
-#    out,h,c = outer_decoder.predict([token]+context)
-#    token = np.round(out)
-#    context = [h,c]
-#    result[0,x,:] = token
-#decoded_word = encode.check(result[0])
-#
+print('''   Generalization Accuracy
+-----------------------------
+word_accuracy: %f
+letter_accuracy: %f
+'''%((word_accuracy*100), (letter_accuracy*100)))

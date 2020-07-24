@@ -20,8 +20,14 @@ use_sids_output:
 
 ./indirection_model.py
 '''
-import keras
+
 import sys
+if len(sys.argv) != 3:
+    print()
+    print("Usage: %s <rolesTraining> <rolesTesting>"%(sys.argv[0]))
+    print()
+    sys.exit(1)
+import keras
 import numpy as np
 from os import system
 from hrr import *
@@ -38,20 +44,21 @@ max_tasks = 100000
 wm = np.empty(3, dtype=object)
 
 # Import encoder and decoder model
-with open('encoder_len5.json', 'r') as encoder_file, open('decoder_len5.json', 'r') as decoder_file:
+with open('models/encoder_len5.json', 'r') as encoder_file, open('models/decoder_len5.json', 'r') as decoder_file:
     encoder_json = encoder_file.read()
     decoder_json = decoder_file.read()
 encoder_model = keras.models.model_from_json(encoder_json)
 decoder_model = keras.models.model_from_json(decoder_json)
-encoder_model.load_weights("encoder_len5.h5")
-decoder_model.load_weights("decoder_len5.h5")
+encoder_model.load_weights("models/encoder_len5.h5")
+decoder_model.load_weights("models/decoder_len5.h5")
 
-roles = np.loadtxt("SG-10-train.txt", dtype=object)
+roles = np.loadtxt(sys.argv[1], dtype=object)
 for i in range(roles.shape[0]):
     roles[i] = np.array(list(roles[i]))
 
     
-corpus = np.loadtxt("len5_10000-train.txt", dtype=object)    
+corpus = np.loadtxt("data/len5_10000-train.txt", dtype=object) 
+word_length = len(corpus[0])
 # Assign one of the words from the test set to each letter from the roles.
 letters_to_word = {}
 for letter in ['a','b','c','d','e','f','g','h','i','j']:
@@ -93,7 +100,7 @@ for i in range(3):
 success_reward = 1
 default_reward = 0
 block_size = 200
-batch_size = 1
+batch_size = 10
 epochs = 10
 accuracy = 0
 cur_task = 0
@@ -117,7 +124,7 @@ for i in range(3):
 system('clear')
 print("Beginning training....\n")
 while accuracy < 95.0 and cur_task < max_tasks:
-    # This is to choose a random sentence from the training
+    # This is to choose a random sentence from the training set
     sample = np.random.randint(0,200)
 
     # Size: 4 -> # of time steps (3 words plus a query)
@@ -250,11 +257,10 @@ while accuracy < 95.0 and cur_task < max_tasks:
 #   Testing loop
 # -----------------
 block_tasks_correct = 0
-roles = np.loadtxt("SG-10-test.txt", dtype=object)
+letters_correct = 0
+roles = np.loadtxt(sys.argv[2], dtype=object)
 for sentence in roles:
-    # This is to choose a random sentence from the training
-    sample = np.random.randint(0,100)
-
+    
     # Size: 4 -> # of time steps (3 words plus a query)
     #       3 -> # of ig og gates,
     #       2 -> hrr convolved with open or close,
@@ -308,12 +314,25 @@ for sentence in roles:
                 token = np.round(out)
                 context = [h,c]
                 result[0,x,:] = token
-            decoded_word = encode.check(result[0])
-            if (decoded_word == encode.check(letters_to_word[sentence[i]])):
+            if (np.array_equal(letters_to_word[sentence[i]], result[0,:-1,:])):
+                # if (decoded_word == encode.check(letters_to_word[sentence[i]])):
                 role_is_matched = True
-        # if open and storing the correct thing in wm
+            else:
+                correct_word = letters_to_word[sentence[i]]
+                output = result[0,:-1,:]
+                
+                            
+    # if open and storing the correct thing in wm
     if (gates_open == 1) and (role_is_matched == True):
         # args.lookup(input_combo[role_dict[query_role],max_val[2,i,0]])
+        letters_correct += word_length
         block_tasks_correct += 1
-                
-print("Generalization Accuracy:", block_tasks_correct)   
+    elif gates_open == 1:
+        # letter accuracy
+        for k in range(word_length):
+            print(correct_word[k,:], output[k,:])
+            if np.array_equal(correct_word[k,:], output[k,:]):
+                letters_correct += 1
+
+print("Word_accuracy:", block_tasks_correct)
+print("Letter_accuracy:", (letters_correct/float(word_length * 100)) * 100)
