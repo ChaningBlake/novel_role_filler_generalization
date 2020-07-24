@@ -37,7 +37,7 @@ max_tasks = 100000
 wm = np.empty(3, dtype=object)
 
 # encodings represent one of the words to be used from the set for the encoder/decoder
-encodings = np.loadtxt("SG-10-train.txt", dtype=object)
+encodings = np.loadtxt("data/FC-10-train.txt", dtype=object)
 for i in range(encodings.shape[0]):
     encodings[i] = np.array(list(encodings[i]))
     
@@ -220,7 +220,7 @@ while accuracy < 95.0 and cur_task < max_tasks:
 #   Testing loop
 # -----------------
 block_tasks_correct = 0
-encodings = np.loadtxt("SG-10-test.txt", dtype=object)
+encodings = np.loadtxt("data/FC-10-test.txt", dtype=object)
 for sentence in encodings:
     # This is to choose a random sentence from the training
     sample = np.random.randint(0,100)

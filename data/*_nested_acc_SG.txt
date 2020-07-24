@@ -1,0 +1,29 @@
+word_accuracy: 90.333333
+letter_accuracy: 96.944444
+
+word_accuracy: 93.666667
+letter_accuracy: 97.611111
+
+word_accuracy: 97.666667
+letter_accuracy: 99.333333
+
+word_accuracy: 90.666667
+letter_accuracy: 97.222222
+
+word_accuracy: 90.333333
+letter_accuracy: 97.666667
+
+word_accuracy: 96.333333
+letter_accuracy: 98.777778
+
+word_accuracy: 96.000000
+letter_accuracy: 98.611111
+
+word_accuracy: 91.000000
+letter_accuracy: 97.166667
+
+word_accuracy: 98.333333
+letter_accuracy: 99.555556
+
+word_accuracy: 96.000000
+letter_accuracy: 98.833333

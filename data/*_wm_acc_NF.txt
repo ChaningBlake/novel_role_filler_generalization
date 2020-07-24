@@ -1,0 +1,19 @@
+Generalization_accuracy: 100
+
+Generalization_accuracy: 100
+
+Generalization_accuracy: 100
+
+Generalization_accuracy: 100
+
+Generalization_accuracy: 100
+
+Generalization_accuracy: 100
+
+Generalization_accuracy: 100
+
+Generalization_accuracy: 100
+
+Generalization_accuracy: 100
+
+Generalization_accuracy: 100
