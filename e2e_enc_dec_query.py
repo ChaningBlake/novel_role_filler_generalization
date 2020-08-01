@@ -6,6 +6,8 @@
 # for the sentence task. Rather than the words being fed to the
 # model on their own timestep, the model will recieve all words
 # at the same time, seperated by word-level start/stop tokens.
+# * In Addition * this model will recieve a role, it is expected to
+# output the word in that role.
 
 import sys
 
@@ -42,6 +44,9 @@ mapping["STOPSENTENCE"] = onehot[27]
 mapping["start"] = onehot[28]
 mapping["stop"] = onehot[29]
 
+# Create the three role encodings
+role_encoding = keras.utils.to_categorical([i for i in range(3)])
+
 # for easy decoding later
 def reverse_map(encoding):
     tokens = ["STARTSENTENCE", "STOPSENTENCE", "start", "stop"]
@@ -71,31 +76,32 @@ for role in string.ascii_lowercase[:10]:
 # Create train and testing set
 x_train = []
 Y = []
+role_selection = []
 for sentence in training_roles:
-    # Start Sentence token
-    encoded_sentence = mapping["STARTSENTENCE"].reshape(1,30)
     # Append each word's encoding along with word-level start/stop tokens
     for role in sentence:
-        encoded_sentence = np.vstack((encoded_sentence,                       
-                                      mapping["start"].reshape(1,30), 
-                                      roles_to_corpus[role], 
-                                      mapping["stop"].reshape(1,30)))
         x_train.append(np.vstack((mapping["start"].reshape(1,30),
                                   roles_to_corpus[role],
                                   mapping["stop"].reshape(1,30))))
-    # Stop Sentence token
-    encoded_sentence = np.vstack((encoded_sentence, 
-                                  mapping["STOPSENTENCE"].reshape(1,30)))
+    role_index = np.random.randint(0,high=3)
+    role_selection.append(np.tile([role_encoding[role_index]],(21,1)))
+    encoded_sentence = np.vstack((mapping["start"].reshape(1,30), 
+                                      roles_to_corpus[sentence[role_index]], 
+                                      mapping["stop"].reshape(1,30)))
     Y.append(encoded_sentence)
 
 Y = np.array(Y)
 X = np.array(x_train).reshape((training_roles.shape[0], 21, 30))
+role_selection = np.array(role_selection)
 preY = Y[:,:-1,:]
 postY = Y[:,1:,:]
 
+
 # Construct end-to-end model
 hidden_size = 1024
-encoder_input = keras.layers.Input((None, X[0].shape[1]), name="enc_input")
+encoder_input_words = keras.layers.Input((None, X[0].shape[1]), name="enc_sentence_input")
+encoder_input_role = keras.layers.Input((None, 3), name="enc_role_input")
+encoder_input = keras.layers.Concatenate()([encoder_input_words, encoder_input_role])
 
 encoder_hidden = keras.layers.LSTM(hidden_size, return_state=True, name="encoder")
 encoder_output, enc_state_h, enc_state_c = encoder_hidden(encoder_input)
@@ -107,10 +113,10 @@ decoder_input = keras.layers.Input((None, X[0].shape[1]), name="dec_input")
 decoder_hidden = keras.layers.LSTM(hidden_size, return_sequences=True, return_state=True, name="decoder")
 decoder_hidden_output, dec_state_h, dec_state_c = decoder_hidden(decoder_input, initial_state=encoder_states)
 
-decoder_dense = keras.layers.Dense(X[0].shape[1], activation='softmax')
+decoder_dense = keras.layers.Dense(Y[0].shape[1], activation='softmax')
 decoder_output = decoder_dense(decoder_hidden_output)
 
-model = keras.Model([encoder_input, decoder_input], decoder_output)
+model = keras.Model([encoder_input_words, encoder_input_role, decoder_input], decoder_output)
 
 model.compile(loss=keras.losses.categorical_crossentropy,
               optimizer=keras.optimizers.Adam(),
@@ -120,15 +126,15 @@ model.compile(loss=keras.losses.categorical_crossentropy,
 #  Train
 # --------
 batch_size = 100
-epochs = 600
-history = model.fit([X,preY], postY,
+epochs = 250
+history = model.fit({"enc_sentence_input": X, "enc_role_input": role_selection, "dec_input": preY}, postY,
                     batch_size=batch_size,
                     epochs=epochs,
-                    verbose=0)
+                    verbose=1)
 
 # Remove teacher forcing
 
-encoder_model = keras.Model(encoder_input, encoder_states)
+encoder_model = keras.Model([encoder_input_words, encoder_input_role], encoder_states)
 
 decoder_state_input_h = keras.layers.Input(shape=(hidden_size,))
 decoder_state_input_c = keras.layers.Input(shape=(hidden_size,))
@@ -148,27 +154,25 @@ decoder_model = keras.Model(
 # --------
 
 # prepare testing data
-x_test = []
+x_test= []
 Y = []
+role_selection = []
 for sentence in testing_roles:
-    # Start Sentence token
-    encoded_sentence = mapping["STARTSENTENCE"].reshape(1,30)
     # Append each word's encoding along with word-level start/stop tokens
     for role in sentence:
-        encoded_sentence = np.vstack((encoded_sentence,                       
-                                      mapping["start"].reshape(1,30), 
-                                      roles_to_corpus[role], 
-                                      mapping["stop"].reshape(1,30)))
         x_test.append(np.vstack((mapping["start"].reshape(1,30),
                                   roles_to_corpus[role],
                                   mapping["stop"].reshape(1,30))))
-    # Stop Sentence token
-    encoded_sentence = np.vstack((encoded_sentence, 
-                                  mapping["STOPSENTENCE"].reshape(1,30)))
+    role_index = np.random.randint(0,high=3)
+    role_selection.append(np.tile([role_encoding[role_index]],(21,1)))
+    encoded_sentence = np.vstack((mapping["start"].reshape(1,30), 
+                                  roles_to_corpus[sentence[role_index]], 
+                                  mapping["stop"].reshape(1,30)))
     Y.append(encoded_sentence)
 
 Y = np.array(Y)
 X = np.array(x_test).reshape((testing_roles.shape[0], 21, 30))
+role_selection = np.array(role_selection)
 preY = Y[:,:-1,:]
 postY = Y[:,1:,:]
 
@@ -177,7 +181,7 @@ word_accuracy = 0
 letter_accuracy = 0
 for i in range(X.shape[0]):
     # Get the context for just a single word
-    context = encoder_model.predict(X[i:i+1])
+    context = encoder_model.predict({"enc_sentence_input": X[i:i+1], "enc_role_input": role_selection[i:i+1]})
     # Prep a sarting token
     token = np.array(mapping["STARTSENTENCE"])
     token = token.reshape([1, 1, token.shape[0]])
