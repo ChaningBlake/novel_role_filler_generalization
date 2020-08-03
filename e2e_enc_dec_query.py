@@ -11,9 +11,9 @@
 
 import sys
 
-if (len(sys.argv) != 4):
+if (len(sys.argv) != 5):
     print()
-    print("Usage %s <corpus> <trainingSet> <testingSet>"%(sys.argv[0]))
+    print("Usage %s <corpus> <trainingSet> <testingSet> <#querytimesteps>"%(sys.argv[0]))
     print()
     sys.exit(1)
     
@@ -73,7 +73,8 @@ roles_to_corpus = {}
 for role in string.ascii_lowercase[:10]:
     roles_to_corpus[role] = np.array([mapping[letter] for letter in random.choice(corpus)])
 
-# Create train and testing set
+nquery_steps = int(sys.argv[4])
+# Create train set
 x_train = []
 Y = []
 role_selection = []
@@ -83,15 +84,24 @@ for sentence in training_roles:
         x_train.append(np.vstack((mapping["start"].reshape(1,30),
                                   roles_to_corpus[role],
                                   mapping["stop"].reshape(1,30))))
+    
     role_index = np.random.randint(0,high=3)
-    role_selection.append(np.tile([role_encoding[role_index]],(21,1)))
+    role_selection.append(np.vstack((np.zeros((21,3)), 
+                                     np.tile(role_encoding[role_index], (nquery_steps,1)))))
     encoded_sentence = np.vstack((mapping["start"].reshape(1,30), 
                                       roles_to_corpus[sentence[role_index]], 
                                       mapping["stop"].reshape(1,30)))
+    
     Y.append(encoded_sentence)
 
+# add the zeros to the input for the query time step
+x_train = np.array(x_train).reshape((training_roles.shape[0],21,30))
+x_train_query = []
+for sentence in x_train:
+    x_train_query.append(np.vstack((sentence, np.zeros((nquery_steps,30)))))
+
 Y = np.array(Y)
-X = np.array(x_train).reshape((training_roles.shape[0], 21, 30))
+X = np.array(x_train_query)
 role_selection = np.array(role_selection)
 preY = Y[:,:-1,:]
 postY = Y[:,1:,:]
@@ -130,7 +140,7 @@ epochs = 250
 history = model.fit({"enc_sentence_input": X, "enc_role_input": role_selection, "dec_input": preY}, postY,
                     batch_size=batch_size,
                     epochs=epochs,
-                    verbose=1)
+                    verbose=0)
 
 # Remove teacher forcing
 
@@ -154,7 +164,7 @@ decoder_model = keras.Model(
 # --------
 
 # prepare testing data
-x_test= []
+x_test = []
 Y = []
 role_selection = []
 for sentence in testing_roles:
@@ -163,15 +173,24 @@ for sentence in testing_roles:
         x_test.append(np.vstack((mapping["start"].reshape(1,30),
                                   roles_to_corpus[role],
                                   mapping["stop"].reshape(1,30))))
+    
     role_index = np.random.randint(0,high=3)
-    role_selection.append(np.tile([role_encoding[role_index]],(21,1)))
+    role_selection.append(np.vstack((np.zeros((21,3)), 
+                                     np.tile(role_encoding[role_index], (nquery_steps,1)))))
     encoded_sentence = np.vstack((mapping["start"].reshape(1,30), 
-                                  roles_to_corpus[sentence[role_index]], 
-                                  mapping["stop"].reshape(1,30)))
+                                      roles_to_corpus[sentence[role_index]], 
+                                      mapping["stop"].reshape(1,30)))
+    
     Y.append(encoded_sentence)
 
+# add the zeros to the input for the query time step
+x_test = np.array(x_test).reshape((testing_roles.shape[0],21,30))
+x_test_query = []
+for sentence in x_test:
+    x_test_query.append(np.vstack((sentence, np.zeros((nquery_steps,30)))))
+
 Y = np.array(Y)
-X = np.array(x_test).reshape((testing_roles.shape[0], 21, 30))
+X = np.array(x_test_query)
 role_selection = np.array(role_selection)
 preY = Y[:,:-1,:]
 postY = Y[:,1:,:]
@@ -200,8 +219,9 @@ for i in range(X.shape[0]):
         for x in range(postY.shape[1]-1):
             if np.array_equal(postY[i,x,:], result[i,x,:]):
                 letter_accuracy += 1
-            else:
-                print(reverse_map(postY[i,x,:]), reverse_map(result[i,x,:]))
-                
-print("Word Accuracy:", word_accuracy)
-print("Letter Accuracy:", letter_accuracy/(float(21)*X.shape[0])*100)
+# debugging
+#            else:
+#                print(reverse_map(postY[i,x,:]), reverse_map(result[i,x,:]))
+#                
+print("Word_accuracy:", word_accuracy)
+print("Letter_accuracy:", letter_accuracy/(float(21)*X.shape[0])*100)
