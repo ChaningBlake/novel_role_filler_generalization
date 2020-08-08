@@ -106,9 +106,6 @@ model.compile(loss = [keras.losses.MSE, keras.losses.MSE, keras.losses.binary_cr
 model_input = {"enc_token_1": t1, "enc_token_2": t2, "dec_token_1": pre_t1, "dec_token_2": pre_t2, "dec_start/stop": pre_t3}
 model_target = {"token_1": post_t1, "token_2": post_t2, "start/stop": post_t3}
 
-for k,v in model_input.items():
-    print(k, v.shape)
-
 # Train it
 batch_size = 100
 epochs = 1600
