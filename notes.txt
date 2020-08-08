@@ -2,17 +2,10 @@
 -- Meeting                                   --
 -----------------------------------------------
 
-Bar graph with fractions of correct
-mean performance and standard error
+*Change to one query time step on e2e_enc_query
+*Then try 5 and try 10
 
-box plots don't assume normality
-but a lot of times we assume normality
-
-
-
-
-
-
+*Change enc-dec-from-array to have the qeury time step
 
 
 
