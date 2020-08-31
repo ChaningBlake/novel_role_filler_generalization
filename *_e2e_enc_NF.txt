@@ -1,20 +1,20 @@
-Word Accuracy: 0
-Letter Accuracy: 67.0952380952381
-Word Accuracy: 0
-Letter Accuracy: 70.80952380952381
-Word Accuracy: 0
-Letter Accuracy: 72.0
-Word Accuracy: 0
-Letter Accuracy: 73.76190476190476
-Word Accuracy: 0
-Letter Accuracy: 61.42857142857143
-Word Accuracy: 0
-Letter Accuracy: 68.66666666666667
-Word Accuracy: 0
-Letter Accuracy: 68.9047619047619
-Word Accuracy: 0
-Letter Accuracy: 55.14285714285714
-Word Accuracy: 0
-Letter Accuracy: 65.47619047619048
-Word Accuracy: 0
-Letter Accuracy: 73.85714285714286
+Word_accuracy: 0
+Letter_accuracy: 67.0952380952381
+Word_accuracy: 0
+Letter_accuracy: 70.80952380952381
+Word_accuracy: 0
+Letter_accuracy: 72.0
+Word_accuracy: 0
+Letter_accuracy: 73.76190476190476
+Word_accuracy: 0
+Letter_accuracy: 61.42857142857143
+Word_accuracy: 0
+Letter_accuracy: 68.66666666666667
+Word_accuracy: 0
+Letter_accuracy: 68.9047619047619
+Word_accuracy: 0
+Letter_accuracy: 55.14285714285714
+Word_accuracy: 0
+Letter_accuracy: 65.47619047619048
+Word_accuracy: 0
+Letter_accuracy: 73.85714285714286
