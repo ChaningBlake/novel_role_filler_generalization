@@ -3,7 +3,7 @@
 import sys
 if len(sys.argv) != 5:
     print()
-    print("Usage: %s <Corpus> <TrainingSet> <TestingSet> <#querySteps"%(sys.argv[0]))
+    print("Usage: %s <Corpus> <TrainingSet> <TestingSet> <#querySteps>"%(sys.argv[0]))
     print()
     sys.exit(1)
     
@@ -70,10 +70,12 @@ post_t2 = np.concatenate((y_train[:,:,1,:], np.zeros((x_train.shape[0],1,50))), 
 
 # Start or stop tokens
 s_s = {"start": [0,1], "stop": [1,0], "none": [0,0]}
-pre_t3 = np.zeros((x_train.shape[0], 5, 2))
+pre_t3 = np.zeros((x_train.shape[0], 2, 2))
 post_t3 = np.copy(pre_t3)
 pre_t3[:,0,:] = s_s["start"]
 post_t3[:,-1,:] = s_s["stop"]
+print(post_t1.shape, post_t2.shape)
+
 
 
 
