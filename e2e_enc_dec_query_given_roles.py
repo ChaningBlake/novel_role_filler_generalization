@@ -142,7 +142,7 @@ epochs = 250
 history = model.fit({"enc_sentence_input": X, "enc_role_input": role_selection, "dec_input": preY}, postY,
                     batch_size=batch_size,
                     epochs=epochs,
-                    verbose=0)
+                    verbose=1)
 
 # Remove teacher forcing
 
