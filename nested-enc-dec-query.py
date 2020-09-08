@@ -173,14 +173,18 @@ keras.utils.plot_model(decoder_model, to_file="new_decoder.png", show_shapes=Tru
 # Each letter that represents a role will be mapped to the encoding for a
 # random word from the corpus.
 x_test = []
+x_role_input = []
 correct_result = [] # used to get accuracy at end
 roles = np.loadtxt(sys.argv[3], dtype=object)
 for sentence in roles:
     #np.vstack(([encoded_mapping[letter] for letter in sentence], np.zeros((nquery_steps,2,1,50))))
+    x_role_input.append(np.vstack((np.zeros((3,3)), 
+                        np.tile(role_encoding[role_index], (nquery_steps,1)))))
     x_test.append(np.vstack(([encoded_mapping[letter] for letter in sentence],np.zeros((nquery_steps,2,1,50)))))
     correct_result.append([selected_words[letter] for letter in sentence])
 x_test = np.array(x_test) # shape (n, 3, 2, 1, 50)
 correct_result = np.array(correct_result)
+x_role_input = np.array(x_role_input)
 t1 = x_test[:,:,0,0,:] # new shape (n,3,50)
 t2 = x_test[:,:,1,0,:] # " '' "
 # 4 time steps. pre
@@ -194,7 +198,9 @@ print(pre_t3.shape)
 
 outer_result = np.empty((len(x_test),3,6,28))
 for i, sentence in enumerate(x_test):
-    context = encoder_model.predict({"enc_token_1": t1[i:i+1], "enc_token_2": t2[i:i+1]})
+    context = encoder_model.predict({"enc_token_1": t1[i:i+1], 
+                                     "enc_token_2": t2[i:i+1], 
+                                     "query_role_input":x_role_input[i:i+1]})
     dec_t1 = np.zeros((1,1,50))
     dec_t2 = np.zeros((1,1,50))
     dec_s_s = pre_t3[0:1,0:1,:]
