@@ -7,3 +7,12 @@ There are several bash scripts in the `/scripts` folder that will help you work 
 2. script2
 3. script3
 4. script4
+
+## There are a couple different models:
+* `e2e_enc_dec.py` - As a contrast to the indirection model. This model is an enc/dec for the words as well as the roles. It expects the whole sentence
+* `e2e_enc_dec_query.py` -
+* `indirection_model.py` - What I worked on for a majority of the time. This is the plain indirection model with nothing to encode the words for it.
+* `indirection_model_w_enc-dec.py` - This is the normal model plus the word encoder-decoder. This is the complete indirection model. 
+* `nested-enc-dec-query.py` -
+* `nested-enc-dec.py` -
+
