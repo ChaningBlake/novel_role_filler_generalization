@@ -51,11 +51,12 @@ for sentence in roles:
     x_role_input.append(np.vstack((np.zeros((3,3)), 
                                      np.tile(role_encoding[role_index], (nquery_steps,1)))))
     x_train.append(np.vstack(([encoded_mapping[letter] for letter in sentence], np.zeros((nquery_steps,2,1,50)))))
-    y_train.append([encoded_mapping[sentence[role_index]]])
+    y_train.append(np.vstack((np.zeros((3,2,1,50)), [encoded_mapping[sentence[role_index]]])))
     
 x_role_input = np.array(x_role_input)
-x_train = np.array(x_train) # shape (n, 3, 2, 1, 50)
-t1 = x_train[:,:,0,0,:] # new shape (n,3 + nquery_steps,50)
+x_train = np.array(x_train) # shape (n, 3 + nquery_steps, 2, 1, 50)
+
+t1 = x_train[:,:,0,0,:] # new shape (n, 3 + nquery_steps,50)
 t2 = x_train[:,:,1,0,:] # " '' "
 y_train = np.array(y_train)[:,:,:,0,:] #(n, 1, 2, 50)
     
@@ -70,11 +71,10 @@ post_t2 = np.concatenate((y_train[:,:,1,:], np.zeros((x_train.shape[0],1,50))), 
 
 # Start or stop tokens
 s_s = {"start": [0,1], "stop": [1,0], "none": [0,0]}
-pre_t3 = np.zeros((x_train.shape[0], 2, 2))
+pre_t3 = np.zeros((x_train.shape[0], 4+nquery_steps, 2))
 post_t3 = np.copy(pre_t3)
 pre_t3[:,0,:] = s_s["start"]
 post_t3[:,-1,:] = s_s["stop"]
-print(post_t1.shape, post_t2.shape)
 
 
 
@@ -126,6 +126,8 @@ model_target = {"token_1": post_t1, "token_2": post_t2, "start/stop": post_t3}
 
 for k,v in model_input.items():
     print(k, v.shape)
+for k,v in model_target.items():
+    print(k, v.shape)
 # Train it
 batch_size = 100
 epochs = 1600
@@ -171,26 +173,34 @@ keras.utils.plot_model(decoder_model, to_file="new_decoder.png", show_shapes=Tru
 # Each letter that represents a role will be mapped to the encoding for a
 # random word from the corpus.
 x_test = []
+x_role_input = []
 correct_result = [] # used to get accuracy at end
 roles = np.loadtxt(sys.argv[3], dtype=object)
 for sentence in roles:
-    x_test.append([encoded_mapping[letter] for letter in sentence])
+    #np.vstack(([encoded_mapping[letter] for letter in sentence], np.zeros((nquery_steps,2,1,50))))
+    x_role_input.append(np.vstack((np.zeros((3,3)), 
+                        np.tile(role_encoding[role_index], (nquery_steps,1)))))
+    x_test.append(np.vstack(([encoded_mapping[letter] for letter in sentence],np.zeros((nquery_steps,2,1,50)))))
     correct_result.append([selected_words[letter] for letter in sentence])
 x_test = np.array(x_test) # shape (n, 3, 2, 1, 50)
 correct_result = np.array(correct_result)
+x_role_input = np.array(x_role_input)
 t1 = x_test[:,:,0,0,:] # new shape (n,3,50)
 t2 = x_test[:,:,1,0,:] # " '' "
 # 4 time steps. pre
 pre_t1 = np.concatenate((np.zeros((x_test.shape[0],1,50)), t1), axis = 1)
 pre_t2 = np.concatenate((np.zeros((x_test.shape[0],1,50)), t2), axis = 1)
-
+print(pre_t1.shape)
 # Start tokens
-pre_t3 = np.zeros((x_test.shape[0], 4, 2))
+pre_t3 = np.zeros((x_test.shape[0], 4+nquery_steps, 2))
 pre_t3[:,0,:] = s_s["start"]
+print(pre_t3.shape)
 
 outer_result = np.empty((len(x_test),3,6,28))
 for i, sentence in enumerate(x_test):
-    context = encoder_model.predict({"enc_token_1": t1[i:i+1], "enc_token_2": t2[i:i+1]})
+    context = encoder_model.predict({"enc_token_1": t1[i:i+1], 
+                                     "enc_token_2": t2[i:i+1], 
+                                     "query_role_input":x_role_input[i:i+1]})
     dec_t1 = np.zeros((1,1,50))
     dec_t2 = np.zeros((1,1,50))
     dec_s_s = pre_t3[0:1,0:1,:]

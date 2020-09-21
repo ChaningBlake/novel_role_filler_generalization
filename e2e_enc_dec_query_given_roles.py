@@ -86,7 +86,9 @@ for sentence in training_roles:
                                   mapping["stop"].reshape(1,30))))
     
     role_index = np.random.randint(0,high=3)
-    role_selection.append(np.vstack((np.zeros((21,3)), 
+    role_selection.append(np.vstack((np.tile(role_encoding[role_index],(7,1)),
+                                     np.tile(role_encoding[role_index],(7,1)),
+                                     np.tile(role_encoding[role_index],(7,1)),
                                      np.tile(role_encoding[role_index], (nquery_steps,1)))))
     encoded_sentence = np.vstack((mapping["start"].reshape(1,30), 
                                       roles_to_corpus[sentence[role_index]], 
@@ -140,7 +142,7 @@ epochs = 250
 history = model.fit({"enc_sentence_input": X, "enc_role_input": role_selection, "dec_input": preY}, postY,
                     batch_size=batch_size,
                     epochs=epochs,
-                    verbose=0)
+                    verbose=1)
 
 # Remove teacher forcing
 
@@ -175,8 +177,10 @@ for sentence in testing_roles:
                                   mapping["stop"].reshape(1,30))))
     
     role_index = np.random.randint(0,high=3)
-    role_selection.append(np.vstack((np.zeros((21,3)), 
-                                     np.tile(role_encoding[role_index], (nquery_steps,1)))))
+    role_selection.append(np.vstack((np.tile(role_encoding[role_index],(7,1)),
+                                     np.tile(role_encoding[role_index],(7,1)),
+                                     np.tile(role_encoding[role_index],(7,1)),
+                                     np.tile(role_encoding[role_index],(nquery_steps,1))))) 
     encoded_sentence = np.vstack((mapping["start"].reshape(1,30), 
                                       roles_to_corpus[sentence[role_index]], 
                                       mapping["stop"].reshape(1,30)))
