@@ -124,13 +124,11 @@ model.compile(loss = [keras.losses.MSE, keras.losses.MSE, keras.losses.binary_cr
 model_input = {"enc_token_1": t1, "enc_token_2": t2, "query_role_input": x_role_input, "dec_token_1": pre_t1, "dec_token_2": pre_t2, "dec_start/stop": pre_t3}
 model_target = {"token_1": post_t1, "token_2": post_t2, "start/stop": post_t3}
 
-for k,v in model_input.items():
-    print(k, v.shape)
-for k,v in model_target.items():
-    print(k, v.shape)
+
+
 # Train it
 batch_size = 100
-epochs = 1600
+epochs = 1
 history = model.fit(model_input, model_target,
                     batch_size=batch_size,
                     epochs=epochs,
@@ -178,10 +176,11 @@ correct_result = [] # used to get accuracy at end
 roles = np.loadtxt(sys.argv[3], dtype=object)
 for sentence in roles:
     #np.vstack(([encoded_mapping[letter] for letter in sentence], np.zeros((nquery_steps,2,1,50))))
+    role_index = np.random.randint(0,high=3)
     x_role_input.append(np.vstack((np.zeros((3,3)), 
                         np.tile(role_encoding[role_index], (nquery_steps,1)))))
     x_test.append(np.vstack(([encoded_mapping[letter] for letter in sentence],np.zeros((nquery_steps,2,1,50)))))
-    correct_result.append([selected_words[letter] for letter in sentence])
+    correct_result.append([selected_words[sentence[role_index]]])
 x_test = np.array(x_test) # shape (n, 3, 2, 1, 50)
 correct_result = np.array(correct_result)
 x_role_input = np.array(x_role_input)
@@ -190,13 +189,12 @@ t2 = x_test[:,:,1,0,:] # " '' "
 # 4 time steps. pre
 pre_t1 = np.concatenate((np.zeros((x_test.shape[0],1,50)), t1), axis = 1)
 pre_t2 = np.concatenate((np.zeros((x_test.shape[0],1,50)), t2), axis = 1)
-print(pre_t1.shape)
 # Start tokens
 pre_t3 = np.zeros((x_test.shape[0], 4+nquery_steps, 2))
 pre_t3[:,0,:] = s_s["start"]
-print(pre_t3.shape)
 
-outer_result = np.empty((len(x_test),3,6,28))
+
+outer_result = np.empty((len(x_test),6,28)) # (samples, letters in target word, size of encoding)
 for i, sentence in enumerate(x_test):
     context = encoder_model.predict({"enc_token_1": t1[i:i+1], 
                                      "enc_token_2": t2[i:i+1], 
@@ -204,55 +202,58 @@ for i, sentence in enumerate(x_test):
     dec_t1 = np.zeros((1,1,50))
     dec_t2 = np.zeros((1,1,50))
     dec_s_s = pre_t3[0:1,0:1,:]
-    inner_result = np.zeros([4,2,50])
-    output_length = 3
+    inner_result = np.zeros([2,50])
     
-    # obtain the result from the inner decoder
-    for x in range(output_length+1):
-        out1, out2, out3, h, c = decoder_model.predict({"states_input_h": context[0], 
-                                         "states_input_c": context[1],
-                                         "dec_token_1": dec_t1,
-                                         "dec_token_2": dec_t2,
-                                         "dec_start/stop": dec_s_s})
-        context = [h,c]
-        dec_t1 = out1
-        dec_t2 = out2
-        dec_s_s = out3
-        inner_result[x,0,:] = out1
-        inner_result[x,1,:] = out2
-    
+    # obtain the result from the inner decoder (one word)
+    out1, out2, out3, h, c = decoder_model.predict({"states_input_h": context[0], 
+                                     "states_input_c": context[1],
+                                     "dec_token_1": dec_t1,
+                                     "dec_token_2": dec_t2,
+                                     "dec_start/stop": dec_s_s})
+    context = [h,c]
+    dec_t1 = out1
+    dec_t2 = out2
+    dec_s_s = out3
+    inner_result[0,:] = out1
+    inner_result[1,:] = out2
+    print(out1)
+    print(out2)
+    sys.exit(1)
     # obtain the result from the outer decoder
-    output_length = 5
-    for word in range(3):
-        context = []
-        context.append(inner_result[word,0:1,:])
-        context.append(inner_result[word,1:2,:])
-        token = np.array(encode.onehot("start"))
-        token = token.reshape([1, 1, token.shape[0]])
-        for letter in range(output_length + 1):
-            out, h, c = outer_decoder.predict([token] + context)
-            token = np.round(out)
-            context = [h,c]
-            outer_result[i, word, letter, :] = token
-            
+    context = []
+    context.append(inner_result[0:1,:])
+    context.append(inner_result[1:2,:])
+    token = np.array(encode.onehot("start"))
+    token = token.reshape([1, 1, token.shape[0]])
+    for letter in range(5+1):
+        out, h, c = outer_decoder.predict([token] + context)
+        token = np.round(out)
+        context = [h,c]
+        outer_result[i, letter, :] = token            
 
 # Obtain Accuracy
 word_accuracy = 0
 letter_accuracy = 0
+correct_result = correct_result[:,0,:,:] # Remove extra dimension. Now (nsamples, word_len, encoding_len)
 for answer, response in zip(correct_result, outer_result):
-    # check each word
-    for word in range(3):
-        if np.array_equal(answer[word,:,:], response[word,:,:]):
-            word_accuracy += 1
-            letter_accuracy += 6
-        #check each letter
-        else:
-            for letter in range(6):
-                if np.array_equal(answer[word,letter,:], response[word,letter,:]):
-                    letter_accuracy += 1
+    # check target word
+    if np.array_equal(answer[:,:], response[:,:]):
+        word_accuracy += 1
+        letter_accuracy += 6
+    #check each letter
+    else:
+        for letter in range(6):
+            if np.array_equal(answer[letter,:], response[letter,:]):
+                letter_accuracy += 1
                     
 word_accuracy /= float(correct_result.shape[0] * 3)
 letter_accuracy /= float(correct_result.shape[0] * 3 * 6)
+
+# Debugging
+for answer, response in zip(correct_result, outer_result):
+    for i in range(len(answer)):
+        print(answer[i], "\n", response[i])
+    print("----------------\n\n")
 
 print('''   Generalization Accuracy
 -----------------------------
