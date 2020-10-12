@@ -78,7 +78,7 @@ for i in range(3):
     ig[i].add(keras.layers.Dense(output_size,
                                  input_shape=[input_size],
                                  use_bias=False))
-    ig[i].compile(loss=keras.losses.huber_loss,
+    ig[i].compile(loss=keras.losses.Huber(),
                   optimizer=keras.optimizers.SGD(lr=0.1),
                   metrics=['accuracy'])
 
@@ -91,7 +91,7 @@ for i in range(3):
     og[i].add(keras.layers.Dense(output_size,
                                  input_shape=[input_size],
                                  use_bias=False))
-    og[i].compile(loss=keras.losses.huber_loss,
+    og[i].compile(loss=keras.losses.Huber(),
                   optimizer=keras.optimizers.SGD(lr=.1),
                   metrics=['accuracy'])
 
