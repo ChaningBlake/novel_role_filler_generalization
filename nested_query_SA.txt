@@ -1,0 +1,30 @@
+word_accuracy: 5.000000
+letter_accuracy: 26.666667
+
+word_accuracy: 5.000000
+letter_accuracy: 22.833333
+
+word_accuracy: 4.000000
+letter_accuracy: 22.333333
+
+word_accuracy: 4.000000
+letter_accuracy: 24.000000
+
+word_accuracy: 3.000000
+letter_accuracy: 22.333333
+
+word_accuracy: 6.000000
+letter_accuracy: 24.333333
+
+word_accuracy: 1.000000
+letter_accuracy: 14.333333
+
+word_accuracy: 5.000000
+letter_accuracy: 20.833333
+
+word_accuracy: 4.000000
+letter_accuracy: 25.166667
+
+word_accuracy: 4.000000
+letter_accuracy: 23.833333
+

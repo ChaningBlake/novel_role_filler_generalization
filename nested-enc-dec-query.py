@@ -13,6 +13,16 @@ from os import system
 import encode # My module
 import pickle, random, string
 
+def my_mse(vec1, vec2):
+    print(vec1[0])
+    print()
+    print(vec2[0])
+    print()
+    print("Token_1 Loss: ", ((vec1[0]-vec2[0])**2).mean(axis=None))
+    print("Token_2 Loss: ", ((vec1[1]-vec2[1])**2).mean(axis=None))
+    input("Press Enter to Conitnue...")
+    return
+
 
 # Import outer decoder
 with open('models/encoder_len5.json', 'r') as encoder_file, open('models/decoder_len5.json', 'r') as decoder_file:
@@ -47,23 +57,22 @@ y_train = []
 x_role_input = []
 nquery_steps = int(sys.argv[4])
 for sentence in roles:
-    role_index = np.random.randint(0,high=3)
+    role_index = np.random.randint(0,high=3) # pick a random role to query
     x_role_input.append(np.vstack((np.zeros((3,3)), 
                                      np.tile(role_encoding[role_index], (nquery_steps,1)))))
     x_train.append(np.vstack(([encoded_mapping[letter] for letter in sentence], np.zeros((nquery_steps,2,1,50)))))
-    y_train.append(np.vstack((np.zeros((3,2,1,50)), [encoded_mapping[sentence[role_index]]])))
+    y_train.append([encoded_mapping[sentence[role_index]]])
     
 x_role_input = np.array(x_role_input)
 x_train = np.array(x_train) # shape (n, 3 + nquery_steps, 2, 1, 50)
 
 t1 = x_train[:,:,0,0,:] # new shape (n, 3 + nquery_steps,50)
 t2 = x_train[:,:,1,0,:] # " '' "
-y_train = np.array(y_train)[:,:,:,0,:] #(n, 1, 2, 50)
-    
+y_train = np.array(y_train)[:,:,:,0,:] #(n, 4, 2, 50)
 
 # 4 time steps. pre
-pre_t1 = np.concatenate((np.zeros((x_train.shape[0],1,50)), t1), axis = 1)
-pre_t2 = np.concatenate((np.zeros((x_train.shape[0],1,50)), t2), axis = 1)
+pre_t1 = np.concatenate((np.zeros((x_train.shape[0],1,50)), y_train[:,:,0,:]), axis = 1)
+pre_t2 = np.concatenate((np.zeros((x_train.shape[0],1,50)), y_train[:,:,1,:]), axis = 1)
 post_t1 = np.concatenate((y_train[:,:,0,:], np.zeros((x_train.shape[0],1,50))), axis = 1)
 post_t2 = np.concatenate((y_train[:,:,1,:], np.zeros((x_train.shape[0],1,50))), axis = 1)
 
@@ -71,7 +80,7 @@ post_t2 = np.concatenate((y_train[:,:,1,:], np.zeros((x_train.shape[0],1,50))), 
 
 # Start or stop tokens
 s_s = {"start": [0,1], "stop": [1,0], "none": [0,0]}
-pre_t3 = np.zeros((x_train.shape[0], 4+nquery_steps, 2))
+pre_t3 = np.zeros((x_train.shape[0], 2, 2))
 post_t3 = np.copy(pre_t3)
 pre_t3[:,0,:] = s_s["start"]
 post_t3[:,-1,:] = s_s["stop"]
@@ -124,15 +133,13 @@ model.compile(loss = [keras.losses.MSE, keras.losses.MSE, keras.losses.binary_cr
 model_input = {"enc_token_1": t1, "enc_token_2": t2, "query_role_input": x_role_input, "dec_token_1": pre_t1, "dec_token_2": pre_t2, "dec_start/stop": pre_t3}
 model_target = {"token_1": post_t1, "token_2": post_t2, "start/stop": post_t3}
 
-
-
 # Train it
 batch_size = 100
-epochs = 1
+epochs = 1600
 history = model.fit(model_input, model_target,
                     batch_size=batch_size,
                     epochs=epochs,
-                    verbose=1)
+                    verbose=0)
 accuracy = model.evaluate(model_input, model_target)
 # use `model.metrics_names` to get indices for accuracy:
 print('T1 Accuracy:', accuracy[4]*100.0, '%')
@@ -170,6 +177,7 @@ keras.utils.plot_model(decoder_model, to_file="new_decoder.png", show_shapes=Tru
 
 # Each letter that represents a role will be mapped to the encoding for a
 # random word from the corpus.
+debug_encoding = []
 x_test = []
 x_role_input = []
 correct_result = [] # used to get accuracy at end
@@ -178,20 +186,16 @@ for sentence in roles:
     #np.vstack(([encoded_mapping[letter] for letter in sentence], np.zeros((nquery_steps,2,1,50))))
     role_index = np.random.randint(0,high=3)
     x_role_input.append(np.vstack((np.zeros((3,3)), 
-                        np.tile(role_encoding[role_index], (nquery_steps,1)))))
+                                   np.tile(role_encoding[role_index], (nquery_steps,1)))))
     x_test.append(np.vstack(([encoded_mapping[letter] for letter in sentence],np.zeros((nquery_steps,2,1,50)))))
     correct_result.append([selected_words[sentence[role_index]]])
+    #debug_encoding.append(encoded_mapping[sentence[role_index]])
+#debug_encoding = np.array(debug_encoding)
 x_test = np.array(x_test) # shape (n, 3, 2, 1, 50)
 correct_result = np.array(correct_result)
 x_role_input = np.array(x_role_input)
 t1 = x_test[:,:,0,0,:] # new shape (n,3,50)
 t2 = x_test[:,:,1,0,:] # " '' "
-# 4 time steps. pre
-pre_t1 = np.concatenate((np.zeros((x_test.shape[0],1,50)), t1), axis = 1)
-pre_t2 = np.concatenate((np.zeros((x_test.shape[0],1,50)), t2), axis = 1)
-# Start tokens
-pre_t3 = np.zeros((x_test.shape[0], 4+nquery_steps, 2))
-pre_t3[:,0,:] = s_s["start"]
 
 
 outer_result = np.empty((len(x_test),6,28)) # (samples, letters in target word, size of encoding)
@@ -210,15 +214,13 @@ for i, sentence in enumerate(x_test):
                                      "dec_token_1": dec_t1,
                                      "dec_token_2": dec_t2,
                                      "dec_start/stop": dec_s_s})
-    context = [h,c]
-    dec_t1 = out1
-    dec_t2 = out2
-    dec_s_s = out3
+    
+    # Debugging
+    #my_mse(debug_encoding[i], [out1,out2])
+    
     inner_result[0,:] = out1
     inner_result[1,:] = out2
-    print(out1)
-    print(out2)
-    sys.exit(1)
+    
     # obtain the result from the outer decoder
     context = []
     context.append(inner_result[0:1,:])
@@ -246,17 +248,19 @@ for answer, response in zip(correct_result, outer_result):
             if np.array_equal(answer[letter,:], response[letter,:]):
                 letter_accuracy += 1
                     
-word_accuracy /= float(correct_result.shape[0] * 3)
-letter_accuracy /= float(correct_result.shape[0] * 3 * 6)
+word_accuracy /= float(correct_result.shape[0])
+letter_accuracy /= float(correct_result.shape[0] * 6)
 
-# Debugging
-for answer, response in zip(correct_result, outer_result):
-    for i in range(len(answer)):
-        print(answer[i], "\n", response[i])
-    print("----------------\n\n")
 
 print('''   Generalization Accuracy
 -----------------------------
 word_accuracy: %f
 letter_accuracy: %f
 '''%((word_accuracy*100), (letter_accuracy*100)))
+
+# Debugging
+for i in range(0):
+    for letter in range(len(correct_result[0])):
+        print(correct_result[i,letter])
+        print(outer_result[i,letter])
+    print("----------------------")

@@ -2,23 +2,27 @@
 -- Meeting                                   --
 -----------------------------------------------
 
-*Change to one query time step on e2e_enc_query
-*Then try 5 and try 10
+Check the vectors yourself
 
-*Change enc-dec-from-array to have the qeury time step
+Chart the sum squared errors. Are there any spikes?
+
+core model - start with outer encoder decoder | the pretrained models
+            then e2e
+            - e2e last
+    other flow
+    
+SHOW THE HOLE - THen show how we will fill it. First time fill the assumed action and comparing
+Show the natural next step with e2e.
 
 
 
 
-IF multiple gates open, flip a coin for which one oto decode
-Could average the outputs and feed them in
-add them together and normalize them
 
-Empty is two vectors of zeros. If others are none you shouldn't do the average
+
+
 
 
 four time steps and the last one produces the stop token with a bunch of zeros
-
 shelve data structure -> Data structure like a dictionary but on disk
 -> Tieing the words to the string
 --> Keep everything faster so you don't have to encode every time.

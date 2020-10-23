@@ -197,7 +197,8 @@ for i in range(X.shape[0]):
             if np.array_equal(postY[i,x,:], result[i,x,:]):
                 letter_accuracy += 1
             else:
-                print(reverse_map(postY[i,x,:]), reverse_map(result[i,x,:]))
+                pass
+                #print(reverse_map(postY[i,x,:]), reverse_map(result[i,x,:]))
                 
 print("Word Accuracy:", word_accuracy)
 print("Letter Accuracy:", letter_accuracy/(float(21)*X.shape[0])*100)

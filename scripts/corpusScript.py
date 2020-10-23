@@ -22,8 +22,6 @@ for i, review in enumerate(review_data):
         if word not in corpus and len(word) > 9:
             corpus.append(word)
             count += 1
-    if i%100 == 0:
-        print(count)
     if count > 100500:
         break
         
