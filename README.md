@@ -3,10 +3,10 @@
 * `/scripts` - Contains all of the scripts used to generate the output.
 
 ### Workflow
-There are several bash scripts in the `/scripts` folder that will help you work with the python programs to generate and test data. Here is a summary on what each one does and in what order they should be used.
+There are several bash scripts in the `/scripts` folder that will help you work with the python programs to generate and test data. 
 
 
-## There are a couple different models:
+## Models:
 * `e2e_enc_dec.py` - 
 * `e2e_enc_dec_query.py` -
 * `indirection_model.py` - 
