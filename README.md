@@ -1,4 +1,8 @@
 # Novel Role Filler Generalization for Recurrent Neural Networks Using Working Memory-Based Indirection
+
+This repository contains the experiments conducted for the thesis found here:
+[Novel Role Filler Generalization for Recurrent Neural Networks Using Working Memory-Based Indirection](https://jewlscholar.mtsu.edu/handle/mtsu/6360)
+___
 * `/data` - Contains all of the sets of words and outputs from runnin the scripts and models
 * `/scripts` - Contains all of the scripts used to generate the output.
 
@@ -7,10 +11,9 @@ There are several bash scripts in the `/scripts` folder that will help you work 
 
 
 ## Models:
-* `e2e_enc_dec.py` - 
-* `e2e_enc_dec_query.py` -
-* `indirection_model.py` - 
-* `indirection_model_w_enc-dec.py` - 
-* `nested-enc-dec-query.py` -
-* `nested-enc-dec.py` -
-
+* `e2e_enc_dec.py`
+* `e2e_enc_dec_query.py`
+* `indirection_model.py` 
+* `indirection_model_w_enc-dec.py` 
+* `nested-enc-dec-query.py`
+* `nested-enc-dec.py`
